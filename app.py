@@ -168,7 +168,6 @@ with st.sidebar:
 
   user_inputs = {}
 
-  # Split columns into digestible groups for better accessibility
   mid_idx = len(feature_cols) // 2
   group1 = feature_cols[:mid_idx]
   group2 = feature_cols[mid_idx:]
@@ -214,18 +213,63 @@ st.markdown("<br>", unsafe_allow_html=True)
 col_left, col_right = st.columns([1.2, 1])
 
 with col_left:
-  st.markdown(
-      f"""
-        <div class="tech-panel">
-            <h3 style="color: #38bdf8; margin-top: 0; font-size: 1.2rem;">📊 Live System Telemetry Overview</h3>
-            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
-                This command center processes multi-variable environmental feeds through a trained Random Forest regressor model. 
-                Use the categorized sidebar tabs to modify sensor inputs and execute real-time solar output estimations.
-            </p>
-            <hr style="border-color: rgba(56, 189, 248, 0.2); margin: 20px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="color: #94a3b8; font-size: 0.8rem; display: block;">MODEL ACCURACY (R² SCORE)</span>
-                    <span style="color: #38bdf8; font-size: 1.6rem; font-family: 'Courier New', Courier, monospace; font-weight: bold;">{accuracy_pct:.2f}%</span>
-                </div>
-                <div style="text-align: right; color: #94a3b8; font-family: 'Courier New', Courier, monospace; font-size: 0.
+  overview_html = f"""
+    <div class="tech-panel">
+        <h3 style="color: #38bdf8; margin-top: 0; font-size: 1.2rem;">📊 Live System Telemetry Overview</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
+            This command center processes multi-variable environmental feeds through a trained Random Forest regressor model. 
+            Use the categorized sidebar tabs to modify sensor inputs and execute real-time solar output estimations.
+        </p>
+        <hr style="border-color: rgba(56, 189, 248, 0.2); margin: 20px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="color: #94a3b8; font-size: 0.8rem; display: block;">MODEL ACCURACY (R² SCORE)</span>
+                <span style="color: #38bdf8; font-size: 1.6rem; font-family: 'Courier New', Courier, monospace; font-weight: bold;">{accuracy_pct:.2f}%</span>
+            </div>
+            <div style="text-align: right; color: #94a3b8; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem;">
+                <span>RECORDS: {len(df)}</span><br>
+                <span>ALGORITHM: RF_REGRESSOR</span>
+            </div>
+        </div>
+    </div>
+    """
+  st.markdown(overview_html, unsafe_allow_html=True)
+
+with col_right:
+  if predict_btn or "last_prediction" in st.session_state:
+    if predict_btn:
+      with st.spinner("Running neural inference across feature vectors..."):
+        time.sleep(0.4)
+        input_df = pd.DataFrame([user_inputs])
+        st.session_state["last_prediction"] = model.predict(input_df)[0]
+
+    pred_val = st.session_state["last_prediction"]
+
+    result_html = f"""
+        <div class="result-box">
+            <span style="color: #94a3b8; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Estimated Solar Power Output</span>
+            <h1 style="color: #38bdf8; font-size: 3.2rem; margin: 15px 0 0 0; font-family: 'Courier New', Courier, monospace; text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);">{pred_val:.2f} kW</h1>
+        </div>
+        """
+    st.markdown(result_html, unsafe_allow_html=True)
+  else:
+    st.markdown(
+        """
+            <div class="result-box" style="border: 1px dashed rgba(56, 189, 248, 0.3);">
+                <span style="color: #94a3b8; font-size: 0.9rem;">Awaiting Telemetry Execution...</span>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Click 'Execute Prediction' in the sidebar to calculate output.</p>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("### 🔬 Neural Feature Importance Matrix")
+st.markdown(
+    "<p style='color: #94a3b8; font-size: 0.9rem;'>Relative weight and impact"
+    " of each environmental sensor parameter on the prediction model.</p>",
+    unsafe_allow_html=True,
+)
+
+chart_data = importance_df.set_index("Feature")
+st.bar_chart(chart_data, color="#38bdf8", height=300)
