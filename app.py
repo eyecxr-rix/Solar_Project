@@ -126,3 +126,137 @@ def load_data_and_train():
     feature_cols = ["Irradiation", "AmbientTemperature", "ModuleTemperature"]
     df = pd.DataFrame(
         np.random.uniform(100, 1000, size=(100, len(feature_cols))),
+        columns=feature_cols,
+    )
+    df["Target"] = df.iloc[:, 0] * 0.85 + np.random.normal(0, 2, 100)
+    X = df[feature_cols]
+    y = df["Target"]
+
+  # Train/Test split
+  X_train, X_test, y_train, y_test = train_test_split(
+      X, y, test_size=0.2, random_state=42
+  )
+  model = RandomForestRegressor(n_estimators=50, random_state=42)
+  model.fit(X_train, y_train)
+
+  # Calculate R2 score percentage
+  y_pred = model.predict(X_test)
+  score = r2_score(y_test, y_pred)
+  accuracy_pct = max(0.0, score * 100)
+
+  # Get Feature Importance DataFrame
+  importance_df = pd.DataFrame({
+      "Feature": feature_cols,
+      "Importance": model.feature_importances_,
+  }).sort_values(by="Importance", ascending=True)
+
+  return model, feature_cols, df, accuracy_pct, importance_df
+
+
+try:
+  model, feature_cols, df, accuracy_pct, importance_df = load_data_and_train()
+except Exception as e:
+  st.error(f"Critical System Fault: {e}")
+  st.stop()
+
+# --- SIDEBAR: INPUT TELEMETRY PARAMETERS ---
+with st.sidebar:
+  st.markdown("### ⚙️ Telemetry Controls")
+  st.markdown(
+      "<p style='color: #64748b; font-size: 0.85rem;'>Adjust environmental"
+      " sensor values:</p>",
+      unsafe_allow_html=True,
+  )
+
+  user_inputs = {}
+  for col_name in feature_cols:
+    default_val = float(df[col_name].mean()) if col_name in df.columns else 50.0
+    user_inputs[col_name] = st.number_input(
+        f"{col_name}", value=round(default_val, 2)
+    )
+
+  st.markdown("<br>", unsafe_allow_html=True)
+  predict_btn = st.button("Execute Prediction")
+
+# --- MAIN PANEL ---
+st.markdown("""
+    <div class="terminal-header">
+        SYS_STATUS: ACTIVE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: SPG-TELEMETRY
+    </div>
+""", unsafe_allow_html=True)
+
+st.title("⚡ SPG-X // Neural Power Predictor")
+st.markdown(
+    "<p style='color: #64748b; font-size: 1.1rem;'>Advanced IoT environmental"
+    " telemetry and power generation forecasting grid.</p>",
+    unsafe_allow_html=True,
+)
+st.markdown("<br>", unsafe_allow_html=True)
+
+col_left, col_right = st.columns([1.2, 1])
+
+with col_left:
+  st.markdown(
+      f"""
+        <div class="tech-panel">
+            <h3 style="color: #00f0ff; margin-top: 0; font-size: 1.2rem;">📊 Live System Telemetry Overview</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
+                This command center processes multi-variable environmental feeds through a trained Random Forest regressor model. 
+                Use the sidebar controls to modify sensor inputs and execute real-time power generation estimations.
+            </p>
+            <hr style="border-color: rgba(0, 240, 255, 0.2); margin: 20px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="color: #94a3b8; font-size: 0.8rem; display: block;">MODEL ACCURACY (R² SCORE)</span>
+                    <span style="color: #00f0ff; font-size: 1.6rem; font-family: 'Courier New', Courier, monospace; font-weight: bold;">{accuracy_pct:.2f}%</span>
+                </div>
+                <div style="text-align: right; color: #94a3b8; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem;">
+                    <span>RECORDS: {len(df)}</span><br>
+                    <span>ALGORITHM: RF_REGRESSOR</span>
+                </div>
+            </div>
+        </div>
+    """,
+      unsafe_allow_html=True,
+  )
+
+with col_right:
+  if predict_btn or "last_prediction" in st.session_state:
+    if predict_btn:
+      with st.spinner("Running neural inference across feature vectors..."):
+        time.sleep(0.4)
+        input_df = pd.DataFrame([user_inputs])
+        st.session_state["last_prediction"] = model.predict(input_df)[0]
+
+    pred_val = st.session_state["last_prediction"]
+
+    st.markdown(
+        f"""
+            <div class="result-box">
+                <span style="color: #94a3b8; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Estimated Power Generation Output</span>
+                <h1 style="color: #00f0ff; font-size: 3.2rem; margin: 15px 0 0 0; font-family: 'Courier New', Courier, monospace; text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);">{pred_val:.2f} kW</h1>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+  else:
+    st.markdown(
+        """
+            <div class="result-box" style="border: 1px dashed rgba(0, 240, 255, 0.3);">
+                <span style="color: #94a3b8; font-size: 0.9rem;">Awaiting Telemetry Execution...</span>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Click 'Execute Prediction' in the sidebar to calculate output.</p>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("### 🔬 Neural Feature Importance Matrix")
+st.markdown(
+    "<p style='color: #64748b; font-size: 0.9rem;'>Relative weight and impact"
+    " of each environmental sensor parameter on the prediction model.</p>",
+    unsafe_allow_html=True,
+)
+
+chart_data = importance_df.set_index("Feature")
+st.bar_chart(chart_data, color="#00f0ff", height=300)
