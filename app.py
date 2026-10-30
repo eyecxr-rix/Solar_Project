@@ -100,12 +100,12 @@ if "initialized" not in st.session_state:
   ) as status:
     st.write(">> Establishing secure socket layer [SSL]...")
     time.sleep(0.3)
-    st.write(">> Computing model accuracy metrics (R² evaluation)...")
+    st.write(">> Analyzing feature weights & importance matrices...")
     time.sleep(0.3)
     st.write(">> Compiling Random Forest Estimators...")
     time.sleep(0.4)
     status.update(
-        label="✅ System Online & Neural Accuracy Verified!",
+        label="✅ System Online & Feature Weights Verified!",
         state="complete",
         expanded=False,
     )
@@ -132,7 +132,7 @@ def load_data_and_train():
     X = df[feature_cols]
     y = df["Target"]
 
-  # Train/Test split to calculate real accuracy score
+  # Train/Test split
   X_train, X_test, y_train, y_test = train_test_split(
       X, y, test_size=0.2, random_state=42
   )
@@ -142,13 +142,19 @@ def load_data_and_train():
   # Calculate R2 score percentage
   y_pred = model.predict(X_test)
   score = r2_score(y_test, y_pred)
-  accuracy_pct = max(0.0, score * 100)  # Convert to percentage
+  accuracy_pct = max(0.0, score * 100)
 
-  return model, feature_cols, df, accuracy_pct
+  # Get Feature Importance DataFrame
+  importance_df = pd.DataFrame({
+      "Feature": feature_cols,
+      "Importance": model.feature_importances_,
+  }).sort_values(by="Importance", ascending=True)
+
+  return model, feature_cols, df, accuracy_pct, importance_df
 
 
 try:
-  model, feature_cols, df, accuracy_pct = load_data_and_train()
+  model, feature_cols, df, accuracy_pct, importance_df = load_data_and_train()
 except Exception as e:
   st.error(f"Critical System Fault: {e}")
   st.stop()
@@ -238,13 +244,4 @@ with col_right:
         """
             <div class="result-box" style="border: 1px dashed rgba(0, 240, 255, 0.3);">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Awaiting Telemetry Execution...</span>
-                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Click 'Execute Prediction' in the sidebar to calculate output.</p>
-            </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("### 📈 Real-Time Sensor Feature Distributions")
-numeric_cols = df.select_dtypes(include=[np.number]).columns[:4]
-st.line_chart(df[numeric_cols].head(50), height=250)
+                <p style="color: #94a3b8; font
