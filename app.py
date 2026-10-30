@@ -5,8 +5,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
 
-# Page configuration - WIDE LAYOUT for full screen utilization
+# Page configuration - WIDE LAYOUT
 st.set_page_config(
     page_title="SPG-X // Neural Telemetry", page_icon="⚡", layout="wide"
 )
@@ -14,7 +16,6 @@ st.set_page_config(
 # Custom High-Tech Cyberpunk / Engineering CSS Theme
 st.markdown("""
     <style>
-    /* Dark Sci-Fi Command Center Background */
     .stApp {
         background-color: #050814;
         background-image: 
@@ -25,7 +26,6 @@ st.markdown("""
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
-    /* Terminal Status Bar */
     .terminal-header {
         background: rgba(13, 20, 36, 0.9);
         border: 1px solid rgba(0, 240, 255, 0.2);
@@ -39,13 +39,11 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
 
-    /* Sidebar Styling */
     [data-testid="stSidebar"] {
         background-color: rgba(8, 12, 24, 0.95);
         border-right: 1px solid rgba(0, 240, 255, 0.15);
     }
 
-    /* Metric Cards / Tech Panels */
     .tech-panel {
         background: rgba(13, 20, 36, 0.65);
         border: 1px solid rgba(0, 240, 255, 0.2);
@@ -56,7 +54,6 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
-    /* Input Fields Styling */
     .stNumberInput input {
         background-color: rgba(5, 8, 20, 0.8) !important;
         color: #00f0ff !important;
@@ -65,7 +62,6 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace !important;
     }
 
-    /* Glowing Neon Action Button */
     .stButton>button {
         width: 100%;
         background: linear-gradient(135deg, #00f0ff 0%, #0077ff 100%);
@@ -85,7 +81,6 @@ st.markdown("""
         background: linear-gradient(135deg, #33f3ff 0%, #1a8cff 100%);
     }
 
-    /* Holographic Result Output Box */
     .result-box {
         background: linear-gradient(135deg, rgba(0, 240, 255, 0.05) 0%, rgba(0, 119, 255, 0.1) 100%);
         border: 1px solid rgba(0, 240, 255, 0.4);
@@ -105,12 +100,12 @@ if "initialized" not in st.session_state:
   ) as status:
     st.write(">> Establishing secure socket layer [SSL]...")
     time.sleep(0.3)
-    st.write(">> Parsing wide-screen telemetry layout matrices...")
+    st.write(">> Computing model accuracy metrics (R² evaluation)...")
     time.sleep(0.3)
     st.write(">> Compiling Random Forest Estimators...")
     time.sleep(0.4)
     status.update(
-        label="✅ System Online & Wide-Screen Calibrated!",
+        label="✅ System Online & Neural Accuracy Verified!",
         state="complete",
         expanded=False,
     )
@@ -130,20 +125,30 @@ def load_data_and_train():
   else:
     feature_cols = ["Irradiation", "AmbientTemperature", "ModuleTemperature"]
     df = pd.DataFrame(
-        np.random.uniform(100, 1000, size=(50, len(feature_cols))),
+        np.random.uniform(100, 1000, size=(100, len(feature_cols))),
         columns=feature_cols,
     )
-    df["Target"] = df.iloc[:, 0] * 0.8
+    df["Target"] = df.iloc[:, 0] * 0.85 + np.random.normal(0, 2, 100)
     X = df[feature_cols]
     y = df["Target"]
 
+  # Train/Test split to calculate real accuracy score
+  X_train, X_test, y_train, y_test = train_test_split(
+      X, y, test_size=0.2, random_state=42
+  )
   model = RandomForestRegressor(n_estimators=50, random_state=42)
-  model.fit(X, y)
-  return model, feature_cols, df
+  model.fit(X_train, y_train)
+
+  # Calculate R2 score percentage
+  y_pred = model.predict(X_test)
+  score = r2_score(y_test, y_pred)
+  accuracy_pct = max(0.0, score * 100)  # Convert to percentage
+
+  return model, feature_cols, df, accuracy_pct
 
 
 try:
-  model, feature_cols, df = load_data_and_train()
+  model, feature_cols, df, accuracy_pct = load_data_and_train()
 except Exception as e:
   st.error(f"Critical System Fault: {e}")
   st.stop()
@@ -167,10 +172,10 @@ with st.sidebar:
   st.markdown("<br>", unsafe_allow_html=True)
   predict_btn = st.button("Execute Prediction")
 
-# --- MAIN PANEL: DASHBOARD & VISUALS ---
+# --- MAIN PANEL ---
 st.markdown("""
     <div class="terminal-header">
-        SYS_STATUS: ACTIVE // ARCHITECTURE: WIDE_COMMAND_GRID // PROTOCOL: SPG-TELEMETRY
+        SYS_STATUS: ACTIVE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: SPG-TELEMETRY
     </div>
 """, unsafe_allow_html=True)
 
@@ -182,12 +187,11 @@ st.markdown(
 )
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Layout columns for the main screen
 col_left, col_right = st.columns([1.2, 1])
 
 with col_left:
   st.markdown(
-      """
+      f"""
         <div class="tech-panel">
             <h3 style="color: #00f0ff; margin-top: 0; font-size: 1.2rem;">📊 Live System Telemetry Overview</h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
@@ -195,19 +199,22 @@ with col_left:
                 Use the sidebar controls to modify sensor inputs and execute real-time power generation estimations.
             </p>
             <hr style="border-color: rgba(0, 240, 255, 0.2); margin: 20px 0;">
-            <div style="display: flex; justify-content: space-between; color: #94a3b8; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem;">
-                <span>ACTIVE_MODEL: RandomForest</span>
-                <span>DATA_POINTS: {}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="color: #94a3b8; font-size: 0.8rem; display: block;">MODEL ACCURACY (R² SCORE)</span>
+                    <span style="color: #00f0ff; font-size: 1.6rem; font-family: 'Courier New', Courier, monospace; font-weight: bold;">{accuracy_pct:.2f}%</span>
+                </div>
+                <div style="text-align: right; color: #94a3b8; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem;">
+                    <span>RECORDS: {len(df)}</span><br>
+                    <span>ALGORITHM: RF_REGRESSOR</span>
+                </div>
             </div>
         </div>
-    """.format(
-          len(df)
-      ),
+    """,
       unsafe_allow_html=True,
   )
 
 with col_right:
-  # Prediction execution logic
   if predict_btn or "last_prediction" in st.session_state:
     if predict_btn:
       with st.spinner("Running neural inference across feature vectors..."):
@@ -230,16 +237,14 @@ with col_right:
     st.markdown(
         """
             <div class="result-box" style="border: 1px dashed rgba(0, 240, 255, 0.3);">
-                <span style="color: #64748b; font-size: 0.9rem;">Awaiting Telemetry Execution...</span>
-                <p style="color: #64748b; font-size: 0.8rem; margin-top: 10px;">Click 'Execute Prediction' in the sidebar to calculate output.</p>
+                <span style="color: #94a3b8; font-size: 0.9rem;">Awaiting Telemetry Execution...</span>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Click 'Execute Prediction' in the sidebar to calculate output.</p>
             </div>
         """,
         unsafe_allow_html=True,
     )
 
 st.markdown("<br>", unsafe_allow_html=True)
-
-# Bottom Feature Distribution Chart Preview
 st.markdown("### 📈 Real-Time Sensor Feature Distributions")
 numeric_cols = df.select_dtypes(include=[np.number]).columns[:4]
 st.line_chart(df[numeric_cols].head(50), height=250)
