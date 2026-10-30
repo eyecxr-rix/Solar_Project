@@ -12,74 +12,56 @@ st.set_page_config(
 
 st.title("☀️ Solar Power Generation Predictor")
 st.write(
-    "Predict solar power output based on environmental and weather conditions."
+    "Dynamically generated input fields for every column in your `spg.csv`"
+    " dataset."
 )
 
 
 @st.cache_resource
-def get_trained_model():
-  model_path = "solar_model.pkl"
+def load_data_and_train():
+  csv_path = "spg.csv"
 
-  # Train if model doesn't exist or is corrupted/empty
-  train_needed = not os.path.exists(model_path)
-  if not train_needed:
-    try:
-      with open(model_path, "rb") as f:
-        return pickle.load(f)
-    except Exception:
-      train_needed = True
+  if os.path.exists(csv_path):
+    df = pd.read_csv(csv_path)
+    # Automatically treat all columns except the last one as features
+    # and the last column as the target to predict
+    feature_cols = list(df.columns[:-1])
+    target_col = df.columns[-1]
+    X = df[feature_cols]
+    y = df[target_col]
+  else:
+    # Fallback if CSV isn't found yet
+    feature_cols = ["Irradiation", "AmbientTemperature", "ModuleTemperature"]
+    X = pd.DataFrame(
+        np.random.uniform(100, 1000, size=(50, len(feature_cols))),
+        columns=feature_cols,
+    )
+    y = X.iloc[:, 0] * 0.8
 
-  if train_needed:
-    # Generate robust synthetic training data to ensure zero dependency issues
-    np.random.seed(42)
-    X = pd.DataFrame({
-        "Irradiation": np.random.uniform(100, 1000, 200),
-        "AmbientTemperature": np.random.uniform(10, 45, 200),
-        "ModuleTemperature": np.random.uniform(15, 75, 200),
-    })
-    y = X["Irradiation"] * 0.85 + np.random.normal(0, 3, 200)
-
-    model = RandomForestRegressor(n_estimators=50, random_state=42)
-    model.fit(X, y)
-    with open(model_path, "wb") as f:
-      pickle.dump(model, f)
-
-  with open(model_path, "rb") as f:
-    return pickle.load(f)
+  model = RandomForestRegressor(n_estimators=50, random_state=42)
+  model.fit(X, y)
+  return model, feature_cols
 
 
-# Load model safely
 try:
-  model = get_trained_model()
+  model, feature_cols = load_data_and_train()
 except Exception as e:
-  st.error(f"Error initializing model: {e}")
+  st.error(f"Error loading dataset: {e}")
   st.stop()
 
-# Input form for user parameters
-st.subheader("Enter Weather Parameters")
-col1, col2 = st.columns(2)
+# Create an input field for EVERY feature column found in spg.csv
+st.subheader("Enter Values for All Dataset Conditions")
+user_inputs = {}
 
-with col1:
-  radiation = st.number_input(
-      "Irradiation / Solar Radiation", min_value=0.0, value=500.0
-  )
-  ambient_temp = st.number_input(
-      "Ambient Temperature (°C)", min_value=-10.0, max_value=60.0, value=25.0
-  )
-
-with col2:
-  module_temp = st.number_input(
-      "Module Temperature (°C)", min_value=-10.0, max_value=90.0, value=30.0
-  )
+# Display input boxes in two neat columns
+cols = st.columns(2)
+for i, col_name in enumerate(feature_cols):
+  with cols[i % 2]:
+    user_inputs[col_name] = st.number_input(f"{col_name}", value=0.0)
 
 if st.button("Predict Power Generation", type="primary"):
-  input_data = pd.DataFrame([[radiation, ambient_temp, module_temp]], columns=[
-      "Irradiation",
-      "AmbientTemperature",
-      "ModuleTemperature",
-  ])
-
-  prediction = model.predict(input_data)
+  input_df = pd.DataFrame([user_inputs])
+  prediction = model.predict(input_df)
   st.success(
       f"Estimated Power Generation: **{prediction[0]:.2f} kW**"
   )
