@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="SPG-X // Solar Telemetry Grid", page_icon="☀️", layout="wide"
 )
 
-# Custom Clean White & Electric Ice Blue CSS Theme
+# Custom Clean White & Electric Ice Blue CSS Theme with Widened Sidebar
 st.markdown("""
     <style>
     .stApp {
@@ -39,9 +39,12 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
 
+    /* Widen Sidebar Container */
     [data-testid="stSidebar"] {
         background-color: rgba(15, 23, 42, 0.98);
         border-right: 1px solid rgba(56, 189, 248, 0.2);
+        min-width: 360px !important;
+        max-width: 420px !important;
     }
 
     .tech-panel {
@@ -204,7 +207,7 @@ st.markdown("""
 
 st.title("☀️ SPG-X // Solar Power Predictor")
 st.markdown(
-    "<p style='color: #94a3b8; font-size: 1.1rem;'>Advanced photovoltaic"
+    "<p style='color: #64748b; font-size: 1.1rem;'>Advanced photovoltaic"
     " environmental telemetry and power generation forecasting grid.</p>",
     unsafe_allow_html=True,
 )
