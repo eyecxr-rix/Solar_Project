@@ -10,44 +10,44 @@ from sklearn.model_selection import train_test_split
 
 # Page configuration - WIDE LAYOUT
 st.set_page_config(
-    page_title="SPG-X // Neural Telemetry", page_icon="⚡", layout="wide"
+    page_title="SPG-X // Thermal Telemetry", page_icon="🔥", layout="wide"
 )
 
-# Custom High-Tech Cyberpunk / Engineering CSS Theme
+# Custom Military Amber / Industrial Tech CSS Theme
 st.markdown("""
     <style>
     .stApp {
-        background-color: #050814;
+        background-color: #0c0f12;
         background-image: 
-            radial-gradient(circle at 20% 15%, rgba(0, 240, 255, 0.07) 0%, transparent 40%),
-            radial-gradient(circle at 80% 85%, rgba(255, 107, 0, 0.06) 0%, transparent 40%),
-            linear-gradient(rgba(5, 8, 20, 0.8), rgba(5, 8, 20, 0.8));
-        color: #cfd8dc;
+            radial-gradient(circle at 20% 15%, rgba(255, 140, 0, 0.05) 0%, transparent 40%),
+            radial-gradient(circle at 80% 85%, rgba(255, 69, 0, 0.04) 0%, transparent 40%),
+            linear-gradient(rgba(12, 15, 18, 0.85), rgba(12, 15, 18, 0.85));
+        color: #e2e8f0;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     .terminal-header {
-        background: rgba(13, 20, 36, 0.9);
-        border: 1px solid rgba(0, 240, 255, 0.2);
-        border-left: 4px solid #00f0ff;
+        background: rgba(20, 25, 32, 0.95);
+        border: 1px solid rgba(255, 140, 0, 0.25);
+        border-left: 4px solid #ff8c00;
         padding: 12px 18px;
         border-radius: 6px;
         font-family: 'Courier New', Courier, monospace;
         font-size: 0.85rem;
-        color: #00f0ff;
+        color: #ffb347;
         margin-bottom: 25px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     }
 
     [data-testid="stSidebar"] {
-        background-color: rgba(8, 12, 24, 0.95);
-        border-right: 1px solid rgba(0, 240, 255, 0.15);
+        background-color: rgba(15, 20, 26, 0.95);
+        border-right: 1px solid rgba(255, 140, 0, 0.15);
     }
 
     .tech-panel {
-        background: rgba(13, 20, 36, 0.65);
-        border: 1px solid rgba(0, 240, 255, 0.2);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        background: rgba(20, 25, 32, 0.75);
+        border: 1px solid rgba(255, 140, 0, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(12px);
         border-radius: 12px;
         padding: 24px;
@@ -55,17 +55,17 @@ st.markdown("""
     }
 
     .stNumberInput input {
-        background-color: rgba(5, 8, 20, 0.8) !important;
-        color: #00f0ff !important;
-        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        background-color: rgba(12, 15, 18, 0.9) !important;
+        color: #ffb347 !important;
+        border: 1px solid rgba(255, 140, 0, 0.35) !important;
         border-radius: 6px !important;
         font-family: 'Courier New', Courier, monospace !important;
     }
 
     .stButton>button {
         width: 100%;
-        background: linear-gradient(135deg, #00f0ff 0%, #0077ff 100%);
-        color: #050814;
+        background: linear-gradient(135deg, #ff8c00 0%, #ff4500 100%);
+        color: #0c0f12;
         border: none;
         padding: 14px 20px;
         border-radius: 8px;
@@ -73,18 +73,18 @@ st.markdown("""
         letter-spacing: 1px;
         text-transform: uppercase;
         transition: all 0.3s ease;
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
     }
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 0 30px rgba(0, 240, 255, 0.7);
-        background: linear-gradient(135deg, #33f3ff 0%, #1a8cff 100%);
+        box-shadow: 0 0 30px rgba(255, 140, 0, 0.6);
+        background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
     }
 
     .result-box {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.05) 0%, rgba(0, 119, 255, 0.1) 100%);
-        border: 1px solid rgba(0, 240, 255, 0.4);
-        box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+        background: linear-gradient(135deg, rgba(255, 140, 0, 0.06) 0%, rgba(255, 69, 0, 0.12) 100%);
+        border: 1px solid rgba(255, 140, 0, 0.4);
+        box-shadow: 0 0 30px rgba(255, 140, 0, 0.15);
         padding: 30px;
         border-radius: 12px;
         text-align: center;
@@ -96,16 +96,16 @@ st.markdown("""
 # Boot-Up Sequence
 if "initialized" not in st.session_state:
   with st.status(
-      "⚡ Initializing SPG-X Neural Core & Telemetry...", expanded=True
+      "🔥 Initializing Thermal Telemetry & Neural Core...", expanded=True
   ) as status:
-    st.write(">> Establishing secure socket layer [SSL]...")
+    st.write(">> Establishing secure industrial socket layer...")
     time.sleep(0.3)
-    st.write(">> Analyzing feature weights & importance matrices...")
+    st.write(">> Calibrating amber thermal matrices...")
     time.sleep(0.3)
     st.write(">> Compiling Random Forest Estimators...")
     time.sleep(0.4)
     status.update(
-        label="✅ System Online & Feature Weights Verified!",
+        label="✅ System Online & Thermal Grid Verified!",
         state="complete",
         expanded=False,
     )
@@ -163,7 +163,7 @@ except Exception as e:
 with st.sidebar:
   st.markdown("### ⚙️ Telemetry Controls")
   st.markdown(
-      "<p style='color: #64748b; font-size: 0.85rem;'>Adjust environmental"
+      "<p style='color: #94a3b8; font-size: 0.85rem;'>Adjust environmental"
       " sensor values:</p>",
       unsafe_allow_html=True,
   )
@@ -181,14 +181,14 @@ with st.sidebar:
 # --- MAIN PANEL ---
 st.markdown("""
     <div class="terminal-header">
-        SYS_STATUS: ACTIVE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: SPG-TELEMETRY
+        SYS_STATUS: ACTIVE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: THERMAL-TELEMETRY
     </div>
 """, unsafe_allow_html=True)
 
-st.title("⚡ SPG-X // Neural Power Predictor")
+st.title("🔥 SPG-X // Thermal Power Predictor")
 st.markdown(
-    "<p style='color: #64748b; font-size: 1.1rem;'>Advanced IoT environmental"
-    " telemetry and power generation forecasting grid.</p>",
+    "<p style='color: #94a3b8; font-size: 1.1rem;'>Industrial IoT environmental"
+    " telemetry and solar output forecasting grid.</p>",
     unsafe_allow_html=True,
 )
 st.markdown("<br>", unsafe_allow_html=True)
@@ -199,16 +199,16 @@ with col_left:
   st.markdown(
       f"""
         <div class="tech-panel">
-            <h3 style="color: #00f0ff; margin-top: 0; font-size: 1.2rem;">📊 Live System Telemetry Overview</h3>
+            <h3 style="color: #ffb347; margin-top: 0; font-size: 1.2rem;">📊 Live System Telemetry Overview</h3>
             <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
                 This command center processes multi-variable environmental feeds through a trained Random Forest regressor model. 
                 Use the sidebar controls to modify sensor inputs and execute real-time power generation estimations.
             </p>
-            <hr style="border-color: rgba(0, 240, 255, 0.2); margin: 20px 0;">
+            <hr style="border-color: rgba(255, 140, 0, 0.2); margin: 20px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <span style="color: #94a3b8; font-size: 0.8rem; display: block;">MODEL ACCURACY (R² SCORE)</span>
-                    <span style="color: #00f0ff; font-size: 1.6rem; font-family: 'Courier New', Courier, monospace; font-weight: bold;">{accuracy_pct:.2f}%</span>
+                    <span style="color: #ffb347; font-size: 1.6rem; font-family: 'Courier New', Courier, monospace; font-weight: bold;">{accuracy_pct:.2f}%</span>
                 </div>
                 <div style="text-align: right; color: #94a3b8; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem;">
                     <span>RECORDS: {len(df)}</span><br>
@@ -234,7 +234,7 @@ with col_right:
         f"""
             <div class="result-box">
                 <span style="color: #94a3b8; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Estimated Power Generation Output</span>
-                <h1 style="color: #00f0ff; font-size: 3.2rem; margin: 15px 0 0 0; font-family: 'Courier New', Courier, monospace; text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);">{pred_val:.2f} kW</h1>
+                <h1 style="color: #ffb347; font-size: 3.2rem; margin: 15px 0 0 0; font-family: 'Courier New', Courier, monospace; text-shadow: 0 0 20px rgba(255, 140, 0, 0.6);">{pred_val:.2f} kW</h1>
             </div>
         """,
         unsafe_allow_html=True,
@@ -242,7 +242,7 @@ with col_right:
   else:
     st.markdown(
         """
-            <div class="result-box" style="border: 1px dashed rgba(0, 240, 255, 0.3);">
+            <div class="result-box" style="border: 1px dashed rgba(255, 140, 0, 0.3);">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Awaiting Telemetry Execution...</span>
                 <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Click 'Execute Prediction' in the sidebar to calculate output.</p>
             </div>
@@ -253,10 +253,10 @@ with col_right:
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("### 🔬 Neural Feature Importance Matrix")
 st.markdown(
-    "<p style='color: #64748b; font-size: 0.9rem;'>Relative weight and impact"
+    "<p style='color: #94a3b8; font-size: 0.9rem;'>Relative weight and impact"
     " of each environmental sensor parameter on the prediction model.</p>",
     unsafe_allow_html=True,
 )
 
 chart_data = importance_df.set_index("Feature")
-st.bar_chart(chart_data, color="#00f0ff", height=300)
+st.bar_chart(chart_data, color="#ff8c00", height=300)
