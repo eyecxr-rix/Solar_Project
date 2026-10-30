@@ -7,65 +7,118 @@ from sklearn.ensemble import RandomForestRegressor
 
 # Page configuration
 st.set_page_config(
-    page_title="Solar Energy Predictor Pro", page_icon="☀️", layout="centered"
+    page_title="SPG-X // Neural Telemetry", page_icon="⚡", layout="centered"
 )
 
-# Custom CSS for animations, gradients, and professional styling
+# Custom High-Tech Cyberpunk / Engineering CSS Theme
 st.markdown("""
     <style>
-    /* Smooth fade-in animation for the whole app */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    /* Dark Sci-Fi Command Center Background */
     .stApp {
-        animation: fadeIn 0.6s ease-out;
+        background-color: #050814;
+        background-image: 
+            radial-gradient(circle at 20% 15%, rgba(0, 240, 255, 0.07) 0%, transparent 40%),
+            radial-gradient(circle at 80% 85%, rgba(255, 107, 0, 0.06) 0%, transparent 40%),
+            linear-gradient(rgba(5, 8, 20, 0.8), rgba(5, 8, 20, 0.8));
+        color: #cfd8dc;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
-    /* Modern Card Container */
-    .css-1r6slb0, .element-container {
-        animation: fadeIn 0.8s ease-out;
+    /* Terminal Status Bar */
+    .terminal-header {
+        background: rgba(13, 20, 36, 0.9);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-left: 4px solid #00f0ff;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.85rem;
+        color: #00f0ff;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
-    
-    /* Styled Predict Button with Hover Effect */
+
+    /* Glassmorphism Input Card Containers */
+    .tech-card {
+        background: rgba(13, 20, 36, 0.65);
+        border: 1px solid rgba(0, 240, 255, 0.15);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Custom Input Labels */
+    label {
+        color: #94a3b8 !important;
+        font-weight: 500 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.5px;
+    }
+
+    /* Input Fields Styling */
+    .stNumberInput input {
+        background-color: rgba(5, 8, 20, 0.8) !important;
+        color: #00f0ff !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        border-radius: 6px !important;
+        font-family: 'Courier New', Courier, monospace !important;
+    }
+    .stNumberInput input:focus {
+        border-color: #00f0ff !important;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.3) !important;
+    }
+
+    /* Glowing Neon Action Button */
     .stButton>button {
         width: 100%;
-        background: linear-gradient(135deg, #FF8C00 0%, #FF4500 100%);
-        color: white;
+        background: linear-gradient(135deg, #00f0ff 0%, #0077ff 100%);
+        color: #050814;
         border: none;
-        padding: 12px 20px;
-        border-radius: 10px;
+        padding: 14px 20px;
+        border-radius: 8px;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(255, 69, 0, 0.3);
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
     }
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 69, 0, 0.5);
-        background: linear-gradient(135deg, #FFA500 0%, #FF6347 100%);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.7);
+        background: linear-gradient(135deg, #33f3ff 0%, #1a8cff 100%);
     }
 
-    /* Success Result Card */
-    .success-card {
-        background: linear-gradient(135deg, rgba(46, 139, 87, 0.15) 0%, rgba(60, 179, 113, 0.25) 100%);
-        border: 1px solid rgba(60, 179, 113, 0.4);
-        padding: 20px;
+    /* Holographic Result Output Box */
+    .result-box {
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.05) 0%, rgba(0, 119, 255, 0.1) 100%);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+        padding: 24px;
         border-radius: 12px;
         text-align: center;
-        animation: fadeIn 0.5s ease-in-out;
-        margin-top: 20px;
+        margin-top: 25px;
+        backdrop-filter: blur(10px);
     }
     </style>
 """, unsafe_allow_html=True)
 
-# App Header
-st.title("☀️ Solar Power Generation Predictor")
+# Terminal Header Banner
+st.markdown("""
+    <div class="terminal-header">
+        SYS_STATUS: ONLINE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: SPG-TELEMETRY
+    </div>
+""", unsafe_allow_html=True)
+
+st.title("⚡ SPG-X // Neural Power Predictor")
 st.markdown(
-    "*Professional AI-powered forecasting dashboard analyzing all environmental"
-    " conditions.*"
+    "<p style='color: #64748b;'>Advanced IoT environmental telemetry and power"
+    " generation forecasting grid.</p>",
+    unsafe_allow_html=True,
 )
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -96,12 +149,11 @@ def load_data_and_train():
 try:
   model, feature_cols, df = load_data_and_train()
 except Exception as e:
-  st.error(f"Error loading dataset: {e}")
+  st.error(f"Critical System Fault: {e}")
   st.stop()
 
-# Input Section inside a clean layout
-st.subheader("⚙️ Environmental & Weather Parameters")
-st.markdown("Adjust the values below based on your conditions:")
+# Input Telemetry Section
+st.subheader("⚙️ Telemetry Parameters")
 
 user_inputs = {}
 cols = st.columns(2)
@@ -112,20 +164,20 @@ for i, col_name in enumerate(feature_cols):
         float(df[col_name].mean()) if col_name in df.columns else 50.0
     )
     user_inputs[col_name] = st.number_input(
-        f"**{col_name}**", value=round(default_val, 2)
+        f"{col_name}", value=round(default_val, 2)
     )
 
-st.markdown("")
-if st.button("🚀 Predict Power Generation", type="primary"):
+st.markdown("<br>", unsafe_allow_html=True)
+
+if st.button("Execute Prediction Calculation"):
   input_df = pd.DataFrame([user_inputs])
   prediction = model.predict(input_df)
 
-  # Display sleek animated result card
   st.markdown(
       f"""
-        <div class="success-card">
-            <h3 style="color: #2E8B57; margin: 0;">Estimated Power Output</h3>
-            <h1 style="color: #3CB371; margin: 10px 0 0 0;">{prediction[0]:.2f} kW</h1>
+        <div class="result-box">
+            <span style="color: #94a3b8; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Estimated Power Generation Output</span>
+            <h1 style="color: #00f0ff; font-size: 2.8rem; margin: 10px 0 0 0; font-family: 'Courier New', Courier, monospace; text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);">{prediction[0]:.2f} kW</h1>
         </div>
     """,
       unsafe_allow_html=True,
