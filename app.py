@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="SPG-X // Solar Telemetry Grid", page_icon="☀️", layout="wide"
 )
 
-# Custom Clean White & Electric Ice Blue CSS Theme with Widened Sidebar
+# Custom Responsive CSS Theme (Adapts seamlessly between Laptop and Mobile)
 st.markdown("""
     <style>
     .stApp {
@@ -39,7 +39,7 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
 
-    /* Widen Sidebar Container */
+    /* Desktop Sidebar Width */
     [data-testid="stSidebar"] {
         background-color: rgba(15, 23, 42, 0.98);
         border-right: 1px solid rgba(56, 189, 248, 0.2);
@@ -92,6 +92,25 @@ st.markdown("""
         border-radius: 12px;
         text-align: center;
         backdrop-filter: blur(10px);
+    }
+
+    /* MOBILE RESPONSIVE MEDIA QUERY (Screens smaller than 768px) */
+    @media screen and (max-width: 768px) {
+        .stApp {
+            padding: 10px;
+        }
+        h1 {
+            font-size: 1.8rem !important;
+        }
+        .result-box h1 {
+            font-size: 2.2rem !important;
+        }
+        /* Make sure metric panels stack nicely on mobile */
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 100% !important;
+            min-width: 100% !important;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
