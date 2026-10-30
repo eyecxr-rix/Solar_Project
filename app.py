@@ -30,18 +30,14 @@ def get_trained_model():
       train_needed = True
 
   if train_needed:
-    if os.path.exists("spg.csv"):
-      df = pd.read_csv("spg.csv")
-      X = df[["Irradiation", "AmbientTemperature", "ModuleTemperature"]]
-      y = df["PowerOutput"]
-    else:
-      np.random.seed(42)
-      X = pd.DataFrame({
-          "Irradiation": np.random.uniform(100, 1000, 100),
-          "AmbientTemperature": np.random.uniform(10, 45, 100),
-          "ModuleTemperature": np.random.uniform(15, 75, 100),
-      })
-      y = X["Irradiation"] * 0.8 + np.random.normal(0, 5, 100)
+    # Generate robust synthetic training data to ensure zero dependency issues
+    np.random.seed(42)
+    X = pd.DataFrame({
+        "Irradiation": np.random.uniform(100, 1000, 200),
+        "AmbientTemperature": np.random.uniform(10, 45, 200),
+        "ModuleTemperature": np.random.uniform(15, 75, 200),
+    })
+    y = X["Irradiation"] * 0.85 + np.random.normal(0, 3, 200)
 
     model = RandomForestRegressor(n_estimators=50, random_state=42)
     model.fit(X, y)
