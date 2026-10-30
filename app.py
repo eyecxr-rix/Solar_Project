@@ -1,5 +1,6 @@
 import os
 import pickle
+import time
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -36,18 +37,6 @@ st.markdown("""
         color: #00f0ff;
         margin-bottom: 25px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    }
-
-    /* Glassmorphism Input Card Containers */
-    .tech-card {
-        background: rgba(13, 20, 36, 0.65);
-        border: 1px solid rgba(0, 240, 255, 0.15);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
     }
 
     /* Custom Input Labels */
@@ -105,10 +94,30 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Cool Tech Boot-Up Sequence (Runs only on initial app load)
+if "initialized" not in st.session_state:
+  with st.status(
+      "⚡ Initializing SPG-X Neural Core & Telemetry...", expanded=True
+  ) as status:
+    st.write(">> Establishing secure socket layer [SSL]...")
+    time.sleep(0.4)
+    st.write(">> Parsing environmental feature weights...")
+    time.sleep(0.4)
+    st.write(">> Compiling Random Forest Estimators & Tensor Matrices...")
+    time.sleep(0.5)
+    st.write(">> Synchronizing IoT sensor stream from `spg.csv`...")
+    time.sleep(0.4)
+    status.update(
+        label="✅ System Online & Calibrated Successfully!",
+        state="complete",
+        expanded=False,
+    )
+  st.session_state["initialized"] = True
+
 # Terminal Header Banner
 st.markdown("""
     <div class="terminal-header">
-        SYS_STATUS: ONLINE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: SPG-TELEMETRY
+        SYS_STATUS: ACTIVE // ARCHITECTURE: RANDOM_FOREST_REGRESSOR // PROTOCOL: SPG-TELEMETRY
     </div>
 """, unsafe_allow_html=True)
 
@@ -170,6 +179,10 @@ for i, col_name in enumerate(feature_cols):
 st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("Execute Prediction Calculation"):
+  # Quick fake hacking/processing text effect before showing output
+  with st.spinner("Running neural inference across feature vectors..."):
+    time.sleep(0.6)
+
   input_df = pd.DataFrame([user_inputs])
   prediction = model.predict(input_df)
 
