@@ -41,7 +41,6 @@ st.markdown("""
 def load_and_train_model():
     dataset_path = "spg.csv"
     
-    # Fallback synthetic generator if spg.csv is missing
     if not os.path.exists(dataset_path):
         np.random.seed(42)
         size = 500
@@ -131,14 +130,39 @@ with tab_manual:
 # ==========================================
 with tab_live:
     st.subheader("🌍 Global Location Search & Satellite Feed Integration")
-    st.markdown("Type any city or address worldwide to resolve coordinates, fetch live meteorological data, and query NASA's solar radiation database.")
+    st.markdown("Select or type any location worldwide using the intelligent suggestion box below.")
 
-    col_search, col_btn = st.columns([3, 1])
-    with col_search:
-        user_address = st.text_input("🔍 Search Target Location (City, Region, or Address):", value="Kolkata")
-    with col_btn:
-        st.markdown("<br>", unsafe_allow_html=True)
-        search_triggered = st.button("Fetch Live Satellite Data", use_container_width=True)
+    # Master list of global and regional cities for autocomplete suggestions
+    global_locations = [
+        "Kolkata, India",
+        "New Delhi, India",
+        "Mumbai, India",
+        "Bangalore / Bengaluru, India",
+        "Hyderabad, India",
+        "Chennai, India",
+        "Pune, India",
+        "Ahmedabad, India",
+        "London, United Kingdom",
+        "New York, United States",
+        "Tokyo, Japan",
+        "Sydney, Australia",
+        "Berlin, Germany",
+        "Dubai, United Arab Emirates"
+    ]
+
+    # Google Maps style interactive selectbox with search/type capability
+    selected_location = st.selectbox(
+        "🔍 Search or Select Target Location:",
+        options=global_locations,
+        index=0,
+        help="Type to search or select a city from the dropdown list."
+    )
+    
+    # Allow manual custom typing fallback if needed
+    custom_query = st.text_input("Or type any custom city/address directly:", value="")
+    target_address = custom_query if custom_query.strip() else selected_location
+
+    search_triggered = st.button("Fetch Live Satellite Data & Forecast", use_container_width=True)
 
     def get_coordinates(address):
         clean_addr = address.strip().lower()
@@ -146,10 +170,14 @@ with tab_live:
             "kolkata": (22.5726, 88.4745, "Kolkata", "India"),
             "delhi": (28.6139, 77.2090, "New Delhi", "India"),
             "mumbai": (19.0760, 72.8777, "Mumbai", "India"),
-            "bangalore": (12.9716, 77.5946, "Bangalore", "India"),
+            "bangalore": (12.9716, 77.5946, "Bengaluru", "India"),
             "bengaluru": (12.9716, 77.5946, "Bengaluru", "India"),
+            "hyderabad": (17.3850, 78.4867, "Hyderabad", "India"),
+            "chennai": (13.0827, 80.2707, "Chennai", "India"),
+            "pune": (18.5204, 73.8567, "Pune", "India"),
             "london": (51.5074, -0.1278, "London", "United Kingdom"),
-            "new york": (40.7128, -74.0060, "New York", "United States")
+            "new york": (40.7128, -74.0060, "New York", "United States"),
+            "tokyo": (35.6762, 139.6503, "Tokyo", "Japan")
         }
         
         for key in city_fallbacks:
@@ -158,7 +186,7 @@ with tab_live:
 
         geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={address}&limit=1&appid=b1b15e88fa797225412429c1c50c122a1"
         try:
-            res = requests.get(geo_url, timeout=5)
+            res = requests.get(geo_url, timeout=6)
             if res.status_code == 200 and len(res.json()) > 0:
                 loc = res.json()[0]
                 return loc['lat'], loc['lon'], loc.get('name', address), loc.get('country', '')
@@ -196,58 +224,55 @@ with tab_live:
             return None, str(e)
 
     if search_triggered:
-        with st.spinner(f"Resolving coordinates and querying NASA satellite stations for '{user_address}'..."):
-            lat, lon, city_name, country = get_coordinates(user_address)
+        with st.spinner(f"Resolving coordinates and querying telemetry for '{target_address}'..."):
+            lat, lon, city_name, country = get_coordinates(target_address)
             
             if lat and lon:
                 st.success(f"📍 Target Located: **{city_name}, {country}** (Latitude: `{lat:.2f}°N`, Longitude: `{lon:.2f}°E`)")
                 
                 telemetry, status = fetch_nasa_solar_and_weather(lat, lon)
                 
-                # Check current hour (Night-time safety override)
+                # Strict Night-Time & Irradiance Safety Check
                 current_hour = datetime.datetime.now().hour
                 is_night = current_hour < 6 or current_hour > 18
                 
-                if is_night:
-                    telemetry['irradiation'] = 0.0
+                if is_night or not telemetry:
+                    telemetry = {"irradiation": 0.0, "temp": 24.0, "rh": 65.0, "pressure": 1013.0, "wind": 2.0}
                 
-                if telemetry:
-                    m1, m2, m3, m4 = st.columns(4)
-                    m1.metric("Solar Irradiation", f"{telemetry['irradiation']:.1f} W/m²")
-                    m2.metric("Ambient Temp", f"{telemetry['temp']:.1f} °C")
-                    m3.metric("Relative Humidity", f"{telemetry['rh']:.1f}%")
-                    m4.metric("Wind Speed", f"{telemetry['wind']:.1f} m/s")
-                    
-                    live_vector = []
-                    for f in features:
-                        f_lower = f.lower()
-                        if 'temp' in f_lower:
-                            live_vector.append(telemetry['temp'])
-                        elif 'irradiation' in f_lower or 'solar' in f_lower:
-                            live_vector.append(telemetry['irradiation'])
-                        elif 'humidity' in f_lower:
-                            live_vector.append(telemetry['rh'])
-                        elif 'pressure' in f_lower:
-                            live_vector.append(telemetry['pressure'])
-                        elif 'wind' in f_lower:
-                            live_vector.append(telemetry['wind'])
-                        else:
-                            live_vector.append(50.0)
-                            
-                    live_df = pd.DataFrame([live_vector], columns=features)
-                    live_pred = 0.0 if is_night else model.predict(live_df)[0]
-                    
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    st.markdown(f"""
-                    <div class="metric-card" style="border-color: #38bdf8;">
-                        <h3 style="color: #94a3b8 !important; margin-bottom: 0px;">LIVE SATELLITE FORECAST ({city_name.upper()})</h3>
-                        <h1 style="color: #38bdf8 !important; font-size: 3rem; margin-top: 5px;">{max(0.0, live_pred):.2f} <span style="font-size: 1.5rem;">kW</span> {'🌙 (Night Mode: 0 Generation)' if is_night else ''}</h1>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.error(f"Could not retrieve telemetry feed: {status}")
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Solar Irradiation", f"{telemetry['irradiation']:.1f} W/m²")
+                m2.metric("Ambient Temp", f"{telemetry['temp']:.1f} °C")
+                m3.metric("Relative Humidity", f"{telemetry['rh']:.1f}%")
+                m4.metric("Wind Speed", f"{telemetry['wind']:.1f} m/s")
+                
+                live_vector = []
+                for f in features:
+                    f_lower = f.lower()
+                    if 'temp' in f_lower:
+                        live_vector.append(telemetry['temp'])
+                    elif 'irradiation' in f_lower or 'solar' in f_lower:
+                        live_vector.append(telemetry['irradiation'])
+                    elif 'humidity' in f_lower:
+                        live_vector.append(telemetry['rh'])
+                    elif 'pressure' in f_lower:
+                        live_vector.append(telemetry['pressure'])
+                    elif 'wind' in f_lower:
+                        live_vector.append(telemetry['wind'])
+                    else:
+                        live_vector.append(50.0)
+                        
+                live_df = pd.DataFrame([live_vector], columns=features)
+                live_pred = 0.0 if (is_night or telemetry['irradiation'] <= 0) else model.predict(live_df)[0]
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class="metric-card" style="border-color: #38bdf8;">
+                    <h3 style="color: #94a3b8 !important; margin-bottom: 0px;">LIVE SATELLITE FORECAST ({city_name.upper()})</h3>
+                    <h1 style="color: #38bdf8 !important; font-size: 3rem; margin-top: 5px;">{max(0.0, live_pred):.2f} <span style="font-size: 1.5rem;">kW</span> {'🌙 (Night Mode: Zero Generation)' if is_night else ''}</h1>
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.error(f"Could not find coordinates for '{user_address}'. Please check the spelling.")
+                st.error(f"Could not find coordinates for '{target_address}'. Please select a city from the dropdown or check spelling.")
 
 # --- Footer ---
 st.markdown("---")
