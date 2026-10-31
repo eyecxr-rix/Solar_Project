@@ -141,9 +141,22 @@ with tab_live:
         search_triggered = st.button("Fetch Live Satellite Data", use_container_width=True)
 
     def get_coordinates(address):
+        clean_addr = address.strip().lower()
+        city_fallbacks = {
+            "kolkata": (22.5726, 88.4745, "Kolkata", "India"),
+            "delhi": (28.6139, 77.2090, "New Delhi", "India"),
+            "mumbai": (19.0760, 72.8777, "Mumbai", "India"),
+            "bengaluru": (12.9716, 77.5946, "Bengaluru", "India"),
+            "london": (51.5074, -0.1278, "London", "United Kingdom"),
+            "new york": (40.7128, -74.0060, "New York", "United States")
+        }
+        
+        if clean_addr in city_fallbacks:
+            return city_fallbacks[clean_addr]
+
         geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={address}&limit=1&appid=b1b15e88fa797225412429c1c50c122a1"
         try:
-            res = requests.get(geo_url, timeout=8)
+            res = requests.get(geo_url, timeout=5)
             if res.status_code == 200 and len(res.json()) > 0:
                 loc = res.json()[0]
                 return loc['lat'], loc['lon'], loc.get('name', address), loc.get('country', '')
