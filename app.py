@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import os
 import requests
-import datetime
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 
@@ -25,8 +24,8 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
     }
     .metric-card {
-        background: rgba(30, 41, 59, 0.7);
-        border: 1px solid rgba(56, 189, 248, 0.3);
+        background: rgba(30, 41, 59, 0.72);
+        border: 1px solid rgba(56, 189, 248, 0.35);
         padding: 22px;
         border-radius: 12px;
         backdrop-filter: blur(12px);
@@ -34,15 +33,151 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
     .sub-card {
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.22);
         padding: 16px;
         border-radius: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. Data Loading & Random Forest Training ---
+# --- 2. Pre-Loaded Instant Autocomplete Catalog (India + West Bengal + Global) ---
+PRELOADED_PLACES = [
+    "New Town, Rajarhat, Kolkata, West Bengal, India",
+    "Salt Lake Sector V, Bidhannagar, Kolkata, West Bengal, India",
+    "Techno India University, EM-4, Sector V, Salt Lake, Kolkata, India",
+    "Haldia, Purba Medinipur, West Bengal, India",
+    "Kolkata, West Bengal, India",
+    "Howrah, West Bengal, India",
+    "Durgapur, Paschim Bardhaman, West Bengal, India",
+    "Asansol, Paschim Bardhaman, West Bengal, India",
+    "Siliguri, Darjeeling, West Bengal, India",
+    "Kharagpur, Paschim Medinipur, West Bengal, India",
+    "Darjeeling, West Bengal, India",
+    "Kalyani, Nadia, West Bengal, India",
+    "Bardhaman, Purba Bardhaman, West Bengal, India",
+    "Digha, Purba Medinipur, West Bengal, India",
+    "Malda, West Bengal, India",
+    "Krishnanagar, Nadia, West Bengal, India",
+    "Bankura, West Bengal, India",
+    "Purulia, West Bengal, India",
+    "Midnapore, Paschim Medinipur, West Bengal, India",
+    "Tamluk, Purba Medinipur, West Bengal, India",
+    "Bhubaneswar, Odisha, India",
+    "Cuttack, Odisha, India",
+    "Puri, Odisha, India",
+    "Rourkela, Odisha, India",
+    "Ranchi, Jharkhand, India",
+    "Jamshedpur, Jharkhand, India",
+    "Dhanbad, Jharkhand, India",
+    "Patna, Bihar, India",
+    "Guwahati, Assam, India",
+    "Shillong, Meghalaya, India",
+    "Agartala, Tripura, India",
+    "Gangtok, Sikkim, India",
+    "New Delhi, Delhi, India",
+    "Noida, Uttar Pradesh, India",
+    "Gurugram, Haryana, India",
+    "Mumbai, Maharashtra, India",
+    "Navi Mumbai, Maharashtra, India",
+    "Pune, Maharashtra, India",
+    "Nagpur, Maharashtra, India",
+    "Nashik, Maharashtra, India",
+    "Bengaluru, Karnataka, India",
+    "Mysuru, Karnataka, India",
+    "Mangaluru, Karnataka, India",
+    "Hyderabad, Telangana, India",
+    "Warangal, Telangana, India",
+    "Chennai, Tamil Nadu, India",
+    "Coimbatore, Tamil Nadu, India",
+    "Madurai, Tamil Nadu, India",
+    "Tiruchirappalli, Tamil Nadu, India",
+    "Ahmedabad, Gujarat, India",
+    "Gandhinagar, Gujarat, India",
+    "Surat, Gujarat, India",
+    "Vadodara, Gujarat, India",
+    "Rajkot, Gujarat, India",
+    "Jaipur, Rajasthan, India",
+    "Jodhpur, Rajasthan, India",
+    "Udaipur, Rajasthan, India",
+    "Jaisalmer, Rajasthan, India",
+    "Bikaner, Rajasthan, India",
+    "Lucknow, Uttar Pradesh, India",
+    "Kanpur, Uttar Pradesh, India",
+    "Varanasi, Uttar Pradesh, India",
+    "Agra, Uttar Pradesh, India",
+    "Prayagraj, Uttar Pradesh, India",
+    "Bhopal, Madhya Pradesh, India",
+    "Indore, Madhya Pradesh, India",
+    "Gwalior, Madhya Pradesh, India",
+    "Jabalpur, Madhya Pradesh, India",
+    "Raipur, Chhattisgarh, India",
+    "Visakhapatnam, Andhra Pradesh, India",
+    "Vijayawada, Andhra Pradesh, India",
+    "Tirupati, Andhra Pradesh, India",
+    "Kochi, Kerala, India",
+    "Thiruvananthapuram, Kerala, India",
+    "Kozhikode, Kerala, India",
+    "Chandigarh, India",
+    "Amritsar, Punjab, India",
+    "Ludhiana, Punjab, India",
+    "Dehradun, Uttarakhand, India",
+    "Haridwar, Uttarakhand, India",
+    "Shimla, Himachal Pradesh, India",
+    "Manali, Himachal Pradesh, India",
+    "Srinagar, Jammu and Kashmir, India",
+    "Jammu, Jammu and Kashmir, India",
+    "Leh, Ladakh, India",
+    "Panaji, Goa, India",
+    "Puducherry, India",
+    "Port Blair, Andaman and Nicobar Islands, India",
+    "New York, NY, United States",
+    "San Francisco, CA, United States",
+    "Los Angeles, CA, United States",
+    "Chicago, IL, United States",
+    "London, United Kingdom",
+    "Manchester, United Kingdom",
+    "Tokyo, Japan",
+    "Osaka, Japan",
+    "Dubai, United Arab Emirates",
+    "Abu Dhabi, United Arab Emirates",
+    "Singapore, Singapore",
+    "Sydney, NSW, Australia",
+    "Melbourne, VIC, Australia",
+    "Berlin, Germany",
+    "Munich, Germany",
+    "Paris, France",
+    "Toronto, ON, Canada",
+    "Zurich, Switzerland"
+]
+
+# Fast coordinate cache for instant zero-latency resolution on common places
+INSTANT_COORDS = {
+    "new town, rajarhat, kolkata, west bengal, india": (22.5867, 88.4750, "New Town, Kolkata, West Bengal, India"),
+    "salt lake sector v, bidhannagar, kolkata, west bengal, india": (22.5726, 88.4312, "Salt Lake Sector V, Kolkata, West Bengal, India"),
+    "techno india university, em-4, sector v, salt lake, kolkata, india": (22.5760, 88.4285, "Techno India University, Salt Lake, Kolkata, India"),
+    "haldia, purba medinipur, west bengal, india": (22.0667, 88.0698, "Haldia, Purba Medinipur, West Bengal, India"),
+    "kolkata, west bengal, india": (22.5726, 88.3639, "Kolkata, West Bengal, India"),
+    "howrah, west bengal, india": (22.5958, 88.2636, "Howrah, West Bengal, India"),
+    "durgapur, paschim bardhaman, west bengal, india": (23.5204, 87.3119, "Durgapur, West Bengal, India"),
+    "asansol, paschim bardhaman, west bengal, india": (23.6739, 86.9524, "Asansol, West Bengal, India"),
+    "siliguri, darjeeling, west bengal, india": (26.7271, 88.3953, "Siliguri, West Bengal, India"),
+    "kharagpur, paschim medinipur, west bengal, india": (22.3460, 87.2320, "Kharagpur, West Bengal, India"),
+    "darjeeling, west bengal, india": (27.0410, 88.2663, "Darjeeling, West Bengal, India"),
+    "ahmedabad, gujarat, india": (23.0225, 72.5714, "Ahmedabad, Gujarat, India"),
+    "new delhi, delhi, india": (28.6139, 77.2090, "New Delhi, Delhi, India"),
+    "mumbai, maharashtra, india": (19.0760, 72.8777, "Mumbai, Maharashtra, India"),
+    "bengaluru, karnataka, india": (12.9716, 77.5946, "Bengaluru, Karnataka, India"),
+    "hyderabad, telangana, india": (17.3850, 78.4867, "Hyderabad, Telangana, India"),
+    "chennai, tamil nadu, india": (13.0827, 80.2707, "Chennai, Tamil Nadu, India"),
+    "pune, maharashtra, india": (18.5204, 73.8567, "Pune, Maharashtra, India"),
+    "new york, ny, united states": (40.7128, -74.0060, "New York, NY, United States"),
+    "london, united kingdom": (51.5074, -0.1278, "London, United Kingdom"),
+    "tokyo, japan": (35.6762, 139.6503, "Tokyo, Japan"),
+    "dubai, united arab emirates": (25.2048, 55.2708, "Dubai, United Arab Emirates"),
+}
+
+# --- 3. Data Loading & Random Forest Training ---
 @st.cache_resource
 def load_and_train_model():
     dataset_path = "spg.csv"
@@ -96,74 +231,153 @@ def load_and_train_model():
 
 model, features, model_r2, record_count, feat_defaults, feat_mins, feat_maxs = load_and_train_model()
 
-# --- 3. Helper Functions for Global Geocoding & Live Telemetry ---
-@st.cache_data(ttl=600)
-def search_places_suggestions(query):
-    """Fetches Google-Maps-style autocomplete suggestions for any town/city worldwide."""
-    if not query or len(query.strip()) < 2:
+# --- 4. Triple-Engine Street, Landmark & City Geocoder ---
+def score_relevance(item, query, bias_india=True):
+    q = query.strip().lower()
+    name = item.get("name", "").lower()
+    label = item.get("label", "").lower()
+    country = item.get("country", "").lower()
+
+    score = 0
+    if name == q:
+        score += 120
+    elif name.startswith(q):
+        score += 80
+    elif q in name:
+        score += 50
+    elif q in label:
+        score += 30
+
+    if bias_india and ("india" in country or item.get("countrycode") == "IN"):
+        score += 65
+
+    return score
+
+@st.cache_data(ttl=900)
+def smart_geocode_search(query, bias_india=True, gmaps_key=""):
+    """
+    Resolves any street address, college, landmark, PIN code, town, or city
+    using Google Maps (if key provided) + Photon OSM Autocomplete + Nominatim + Open-Meteo.
+    """
+    if not query or not query.strip():
         return []
-    url = "https://geocoding-api.open-meteo.com/v1/search"
-    params = {"name": query.strip(), "count": 8, "language": "en", "format": "json"}
+
+    clean_q = query.strip()
+    lower_q = clean_q.lower()
+    results = []
+    seen_coords = set()
+
+    def add_candidate(name, label, lat, lon, country=""):
+        key = (round(float(lat), 2), round(float(lon), 2))
+        if key not in seen_coords:
+            seen_coords.add(key)
+            results.append({
+                "name": name,
+                "label": label,
+                "lat": float(lat),
+                "lon": float(lon),
+                "country": country
+            })
+
+    # 0. Instant match from curated cache
+    if lower_q in INSTANT_COORDS:
+        lat, lon, lbl = INSTANT_COORDS[lower_q]
+        add_candidate(lbl.split(",")[0], lbl, lat, lon, lbl.split(",")[-1].strip())
+
+    headers = {"User-Agent": "SPGX-Solar-Telemetry-Grid/3.0 (TechnoIndiaUniversity)"}
+
+    # 1. Optional Google Maps Geocoding API (if user entered an API key)
+    if gmaps_key and len(gmaps_key.strip()) > 10:
+        try:
+            g_url = "https://maps.googleapis.com/maps/api/geocode/json"
+            g_params = {"address": clean_q, "key": gmaps_key.strip()}
+            if bias_india:
+                g_params["region"] = "in"
+            g_res = requests.get(g_url, params=g_params, timeout=5)
+            if g_res.status_code == 200:
+                for item in g_res.json().get("results", [])[:6]:
+                    loc = item.get("geometry", {}).get("location", {})
+                    fmt = item.get("formatted_address", clean_q)
+                    short_name = fmt.split(",")[0].strip()
+                    add_candidate(short_name, fmt, loc.get("lat"), loc.get("lng"), fmt.split(",")[-1].strip())
+        except Exception:
+            pass
+
+    # 2. Photon Komoot OpenStreetMap Autocomplete API (Streets, Universities, Landmarks, Towns)
     try:
-        res = requests.get(url, params=params, timeout=6)
-        if res.status_code == 200:
-            data = res.json()
-            results = data.get("results", [])
-            suggestions = []
-            for item in results:
-                name = item.get("name", "")
-                admin1 = item.get("admin1", "")
-                country = item.get("country", "")
-                lat = item.get("latitude")
-                lon = item.get("longitude")
-                tz = item.get("timezone", "UTC")
-                label_parts = [p for p in [name, admin1, country] if p]
-                label = f"{', '.join(label_parts)}  ({lat:.2f}°, {lon:.2f}°)"
-                suggestions.append({
-                    "label": label,
-                    "name": name,
-                    "admin1": admin1,
-                    "country": country,
-                    "lat": lat,
-                    "lon": lon,
-                    "timezone": tz
-                })
-            return suggestions
+        p_url = "https://photon.komoot.io/api/"
+        p_params = {"q": clean_q, "limit": 8, "lang": "en"}
+        if bias_india:
+            p_params["lat"] = 22.5726
+            p_params["lon"] = 88.3639
+            p_params["location_bias_scale"] = 0.25
+        p_res = requests.get(p_url, params=p_params, headers=headers, timeout=5)
+        if p_res.status_code == 200:
+            for feat in p_res.json().get("features", []):
+                coords = feat.get("geometry", {}).get("coordinates", [0, 0])
+                props = feat.get("properties", {})
+                name = props.get("name") or props.get("street") or props.get("city") or clean_q
+                parts = []
+                for k in ["name", "street", "district", "locality", "city", "county", "state", "postcode", "country"]:
+                    val = props.get(k)
+                    if val and str(val) not in parts:
+                        parts.append(str(val))
+                label = ", ".join(parts) if parts else name
+                add_candidate(name, label, coords[1], coords[0], props.get("country", ""))
     except Exception:
         pass
-    return []
 
+    # 3. OpenStreetMap Nominatim API (Deep Street / PIN code / Landmark search)
+    try:
+        n_url = "https://nominatim.openstreetmap.org/search"
+        n_params = {"q": clean_q, "format": "jsonv2", "addressdetails": 1, "limit": 6, "accept-language": "en"}
+        n_res = requests.get(n_url, params=n_params, headers=headers, timeout=5)
+        if n_res.status_code == 200:
+            for item in n_res.json():
+                disp = item.get("display_name", "")
+                name = item.get("name") or disp.split(",")[0].strip()
+                addr = item.get("address", {})
+                country = addr.get("country", "")
+                short_parts = [p.strip() for p in disp.split(",")[:5]]
+                if country and country not in short_parts:
+                    short_parts.append(country)
+                clean_label = ", ".join(short_parts)
+                add_candidate(name, clean_label, item.get("lat"), item.get("lon"), country)
+    except Exception:
+        pass
+
+    # 4. Open-Meteo Global Geocoder Fallback
+    if len(results) < 2:
+        try:
+            om_url = "https://geocoding-api.open-meteo.com/v1/search"
+            om_res = requests.get(om_url, params={"name": clean_q, "count": 6, "language": "en", "format": "json"}, timeout=5)
+            if om_res.status_code == 200:
+                for item in om_res.json().get("results", []):
+                    name = item.get("name", clean_q)
+                    admin1 = item.get("admin1", "")
+                    country = item.get("country", "")
+                    parts = [p for p in [name, admin1, country] if p]
+                    add_candidate(name, ", ".join(parts), item.get("latitude"), item.get("longitude"), country)
+        except Exception:
+            pass
+
+    results.sort(key=lambda x: score_relevance(x, clean_q, bias_india=bias_india), reverse=True)
+    return results[:8]
+
+# --- 5. Real-Time Solar & Weather Telemetry Engine ---
 def fetch_realtime_solar_telemetry(lat, lon):
-    """Fetches real-time weather and solar radiation for exact coordinates."""
     url = "https://api.open-meteo.com/v1/forecast"
     current_vars = ",".join([
-        "temperature_2m",
-        "relative_humidity_2m",
-        "pressure_msl",
-        "precipitation",
-        "snowfall",
-        "cloud_cover",
-        "cloud_cover_low",
-        "cloud_cover_mid",
-        "cloud_cover_high",
-        "wind_speed_10m",
-        "wind_direction_10m",
-        "wind_gusts_10m",
-        "shortwave_radiation",
-        "is_day"
+        "temperature_2m", "relative_humidity_2m", "pressure_msl",
+        "precipitation", "snowfall", "cloud_cover", "cloud_cover_low",
+        "cloud_cover_mid", "cloud_cover_high", "wind_speed_10m",
+        "wind_direction_10m", "wind_gusts_10m", "shortwave_radiation", "is_day"
     ])
     hourly_vars = ",".join([
-        "temperature_2m",
-        "relative_humidity_2m",
-        "pressure_msl",
-        "cloud_cover",
-        "cloud_cover_low",
-        "cloud_cover_mid",
-        "cloud_cover_high",
-        "wind_speed_10m",
-        "wind_direction_10m",
-        "wind_gusts_10m",
-        "shortwave_radiation"
+        "temperature_2m", "relative_humidity_2m", "pressure_msl",
+        "cloud_cover", "cloud_cover_low", "cloud_cover_mid",
+        "cloud_cover_high", "wind_speed_10m", "wind_direction_10m",
+        "wind_gusts_10m", "shortwave_radiation"
     ])
     params = {
         "latitude": lat,
@@ -182,7 +396,6 @@ def fetch_realtime_solar_telemetry(lat, lon):
         return None, str(e)
 
 def build_feature_vector(telemetry_dict):
-    """Maps live meteorological telemetry to the exact columns of spg.csv."""
     rad = float(telemetry_dict.get("shortwave_radiation", 0.0))
     temp = float(telemetry_dict.get("temperature_2m", 25.0))
     rh = float(telemetry_dict.get("relative_humidity_2m", 50.0))
@@ -198,7 +411,6 @@ def build_feature_vector(telemetry_dict):
     wg = float(telemetry_dict.get("wind_gusts_10m", 5.0))
     is_day = int(telemetry_dict.get("is_day", 1 if rad > 5 else 0))
 
-    # Dynamic solar geometry estimation from radiation intensity
     if is_day == 0 or rad <= 0:
         zenith, azimuth, aoi = 95.0, 180.0, 90.0
     else:
@@ -252,9 +464,9 @@ def build_feature_vector(telemetry_dict):
 
     return pd.DataFrame([row], columns=features)
 
-# --- 4. Dashboard Header ---
+# --- 6. Dashboard Header ---
 st.markdown("# ☀️ SPG-X: Solar Power Prediction Grid & Telemetry Dashboard")
-st.markdown("Advanced photovoltaic power output forecasting & live global meteorological telemetry.")
+st.markdown("Advanced photovoltaic power output forecasting & live street-level global meteorological telemetry.")
 
 tab_live, tab_manual = st.tabs([
     "📡 Live Global Location & Satellite Telemetry",
@@ -262,199 +474,105 @@ tab_live, tab_manual = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: LIVE SATELLITE & GLOBAL LOCATION SEARCH
+# TAB 1: UNIFIED GOOGLE-MAPS-STYLE LOCATION SEARCH
 # ==========================================
 with tab_live:
-    st.subheader("🌍 Intelligent Location Search & Real-Time Telemetry")
-    st.markdown("Type any city, town, or district worldwide (e.g., **Haldia**, **Ahmedabad**, **Kolkata**, **New York**) to get live suggestions and real-time solar telemetry.")
+    if "custom_places" not in st.session_state:
+        st.session_state.custom_places = []
 
-    col_input, col_select = st.columns([1.2, 1.8], gap="medium")
+    all_dropdown_options = st.session_state.custom_places + [
+        p for p in PRELOADED_PLACES if p not in st.session_state.custom_places
+    ]
 
-    with col_input:
-        search_query = st.text_input(
-            "🔍 Type Location Name:",
-            value="Haldia",
-            placeholder="Type e.g. Haldia, Ahmedabad, Kolkata, Tokyo..."
+    col_title, col_opts = st.columns([2.2, 1.2])
+    with col_title:
+        st.subheader("🌍 Smart Location & Landmark Search")
+    with col_opts:
+        bias_india = st.checkbox("🇮🇳 Prioritize India Results", value=True, help="Boosts Indian cities, towns, colleges, and PIN codes to the top.")
+
+    # Single Unified Search Bar: Filters 100+ places live as you type OR accepts any custom street/landmark/PIN code
+    try:
+        user_selection = st.selectbox(
+            "🔍 Type any Address, College, Landmark, PIN Code, or City (or pick from suggestions as you type):",
+            options=all_dropdown_options,
+            index=0,
+            accept_new_options=True,
+            placeholder="Start typing e.g. Haldia, Techno India, Salt Lake, Ahmedabad, 700156, New York..."
         )
+    except TypeError:
+        # Fallback if running on an older Streamlit version without accept_new_options
+        c1, c2 = st.columns([1.6, 1.4])
+        with c1:
+            preset_pick = st.selectbox("🔍 Quick-Search 100+ Cities & Hubs:", options=all_dropdown_options, index=0)
+        with c2:
+            custom_typed = st.text_input("Or type any custom Street / Landmark / PIN Code:", value="")
+        user_selection = custom_typed.strip() if custom_typed.strip() else preset_pick
 
-    suggestions = search_places_suggestions(search_query)
+    with st.expander("⚙️ Optional: Plug in Google Maps API Key (Not required — OpenStreetMap Photon & Nominatim active by default)"):
+        gmaps_api_key = st.text_input("Google Maps Geocoding API Key (Optional):", value="", type="password")
 
-    with col_select:
-        if suggestions:
-            labels = [s["label"] for s in suggestions]
-            selected_label = st.selectbox("📍 Select Matching Place (Auto-Suggested):", options=labels, index=0)
-            selected_place = next(s for s in suggestions if s["label"] == selected_label)
-        else:
-            selected_place = None
-            st.warning("No matching locations found. Try typing at least 2 characters or check spelling.")
+    if user_selection:
+        if user_selection not in all_dropdown_options:
+            st.session_state.custom_places.insert(0, user_selection)
 
-    sim_peak_noon = st.checkbox(
-        "☀️ Simulate Tomorrow's Peak Noon (12:00 PM) Forecast if target location is currently at Night",
-        value=False
-    )
+        matches = smart_geocode_search(user_selection, bias_india=bias_india, gmaps_key=gmaps_api_key)
 
-    if selected_place:
-        lat = selected_place["lat"]
-        lon = selected_place["lon"]
-        place_title = f"{selected_place['name']}, {selected_place['admin1']}, {selected_place['country']}".replace(", ,", ",")
-
-        with st.spinner(f"Synchronizing live telemetry for {place_title}..."):
-            api_data, status = fetch_realtime_solar_telemetry(lat, lon)
-
-        if api_data:
-            current = api_data.get("current", {})
-            tz_name = api_data.get("timezone", "UTC")
-            local_time_str = current.get("time", "").replace("T", " ")
-            is_day_now = int(current.get("is_day", 0))
-            live_rad = float(current.get("shortwave_radiation", 0.0))
-
-            # Optional Peak Noon simulation for locations currently in nighttime
-            using_noon_sim = False
-            active_telemetry = current.copy()
-
-            if sim_peak_noon and (is_day_now == 0 or live_rad <= 5.0):
-                hourly = api_data.get("hourly", {})
-                times = hourly.get("time", [])
-                noon_idx = next((i for i, t in enumerate(times) if "T12:00" in t), None)
-                if noon_idx is not None:
-                    using_noon_sim = True
-                    for k in [
-                        "temperature_2m", "relative_humidity_2m", "pressure_msl",
-                        "cloud_cover", "cloud_cover_low", "cloud_cover_mid",
-                        "cloud_cover_high", "wind_speed_10m", "wind_direction_10m",
-                        "wind_gusts_10m", "shortwave_radiation"
-                    ]:
-                        vals = hourly.get(k, [])
-                        if noon_idx < len(vals) and vals[noon_idx] is not None:
-                            active_telemetry[k] = vals[noon_idx]
-                    active_telemetry["is_day"] = 1
-
-            eff_is_day = int(active_telemetry.get("is_day", 0))
-            eff_rad = float(active_telemetry.get("shortwave_radiation", 0.0))
-
-            day_badge = (
-                "☀️ PEAK NOON SIMULATION (12:00 PM LOCAL)" if using_noon_sim
-                else ("☀️ DAYTIME FEED ACTIVE" if eff_is_day == 1 else "🌙 NIGHTTIME AT LOCATION (SOLAR IRRADIANCE = 0)")
-            )
-
-            st.success(
-                f"📍 **Target Locked:** {place_title} | **Coords:** `{lat:.4f}°N, {lon:.4f}°E` | "
-                f"**Local Time:** `{local_time_str} ({tz_name})` | **Status:** `{day_badge}`"
-            )
-
-            m1, m2, m3, m4, m5 = st.columns(5)
-            m1.metric("Solar Irradiance", f"{eff_rad:.1f} W/m²")
-            m2.metric("Ambient Temp", f"{active_telemetry.get('temperature_2m', 0.0):.1f} °C")
-            m3.metric("Relative Humidity", f"{active_telemetry.get('relative_humidity_2m', 0.0):.0f}%")
-            m4.metric("Cloud Cover", f"{active_telemetry.get('cloud_cover', 0.0):.0f}%")
-            m5.metric("Wind Speed (10m)", f"{active_telemetry.get('wind_speed_10m', 0.0):.1f} km/h")
-
-            live_df = build_feature_vector(active_telemetry)
-
-            # Strict physical zero enforcement when sun is down or irradiance is zero
-            if eff_is_day == 0 or eff_rad <= 1.0:
-                predicted_kw = 0.0
+        if matches:
+            # If multiple distinct landmarks/areas match the query, show sleek 1-click selector pills
+            if len(matches) > 1:
+                match_labels = [f"📍 {m['label']}" for m in matches[:5]]
+                chosen_pill = st.radio(
+                    "✨ Closest Matching Locations (Click to switch):",
+                    options=match_labels,
+                    index=0,
+                    horizontal=True
+                )
+                chosen_idx = match_labels.index(chosen_pill)
+                target = matches[chosen_idx]
             else:
-                predicted_kw = max(0.0, float(model.predict(live_df)[0]))
+                target = matches[0]
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            status_note = (
-                "🌙 Local Nighttime — Photovoltaic panels generate 0.00 kW after sunset. "
-                "Check the box above to simulate tomorrow's Peak Noon (12:00 PM) output for this city!"
-                if (eff_is_day == 0 or eff_rad <= 1.0)
-                else "⚡ Live Random Forest inference computed from real-time satellite & meteorological feed."
+            lat, lon = target["lat"], target["lon"]
+            place_title = target["label"]
+            short_name = target["name"]
+
+            sim_peak_noon = st.checkbox(
+                "☀️ Simulate Tomorrow's Peak Noon (12:00 PM) Forecast when location is currently at Night",
+                value=False
             )
 
-            st.markdown(f"""
-            <div class="metric-card">
-                <h3 style="color: #94a3b8 !important; margin-bottom: 4px;">
-                    ESTIMATED SOLAR POWER OUTPUT — {selected_place['name'].upper()}
-                </h3>
-                <h1 style="color: #38bdf8 !important; font-size: 3.4rem; margin: 8px 0;">
-                    {predicted_kw:.2f} <span style="font-size: 1.6rem;">kW</span>
-                </h1>
-                <p style="color: #cbd5e1; font-size: 0.95rem; margin-top: 4px;">{status_note}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            with st.spinner(f"Synchronizing live satellite & meteorological feed for {place_title}..."):
+                api_data, status = fetch_realtime_solar_telemetry(lat, lon)
 
-            with st.expander("🔎 Inspect Complete 20-Feature Telemetry Vector Sent to Model"):
-                st.dataframe(live_df, use_container_width=True)
-        else:
-            st.error(f"Failed to fetch live weather telemetry: {status}")
+            if api_data:
+                current = api_data.get("current", {})
+                tz_name = api_data.get("timezone", "UTC")
+                local_time_str = current.get("time", "").replace("T", " ")
+                is_day_now = int(current.get("is_day", 0))
+                live_rad = float(current.get("shortwave_radiation", 0.0))
 
-# ==========================================
-# TAB 2: MANUAL TELEMETRY & FEATURE IMPORTANCE
-# ==========================================
-with tab_manual:
-    st.sidebar.header("⚙️ Manual Sensor Input Parameters")
-    manual_inputs = {}
-    for col in features:
-        c_min = float(feat_mins.get(col, 0.0))
-        c_max = float(feat_maxs.get(col, 1000.0))
-        c_def = float(feat_defaults.get(col, (c_min + c_max) / 2.0))
-        if c_min == c_max:
-            c_max = c_min + 1.0
-        manual_inputs[col] = st.sidebar.number_input(
-            label=col,
-            min_value=c_min,
-            max_value=c_max * 1.5 if c_max > 0 else 100.0,
-            value=c_def,
-            step=max(0.01, round((c_max - c_min) / 100.0, 2))
-        )
+                using_noon_sim = False
+                active_telemetry = current.copy()
 
-    manual_df = pd.DataFrame([manual_inputs], columns=features)
-    manual_rad_cols = [c for c in features if "shortwave" in c.lower() or "irradiation" in c.lower()]
-    manual_rad_val = float(manual_df[manual_rad_cols[0]].iloc[0]) if manual_rad_cols else 500.0
-    manual_pred = 0.0 if manual_rad_val <= 0 else max(0.0, float(model.predict(manual_df)[0]))
+                if sim_peak_noon and (is_day_now == 0 or live_rad <= 5.0):
+                    hourly = api_data.get("hourly", {})
+                    times = hourly.get("time", [])
+                    noon_idx = next((i for i, t in enumerate(times) if "T12:00" in t), None)
+                    if noon_idx is not None:
+                        using_noon_sim = True
+                        for k in [
+                            "temperature_2m", "relative_humidity_2m", "pressure_msl",
+                            "cloud_cover", "cloud_cover_low", "cloud_cover_mid",
+                            "cloud_cover_high", "wind_speed_10m", "wind_direction_10m",
+                            "wind_gusts_10m", "shortwave_radiation"
+                        ]:
+                            vals = hourly.get(k, [])
+                            if noon_idx < len(vals) and vals[noon_idx] is not None:
+                                active_telemetry[k] = vals[noon_idx]
+                        active_telemetry["is_day"] = 1
 
-    col_left, col_right = st.columns([1.2, 1], gap="large")
+                eff_is_day = int(active_telemetry.get("is_day", 0))
+                eff_rad = float(active_telemetry.get("shortwave_radiation", 0.0))
 
-    with col_left:
-        st.markdown(f"""
-        <div class="sub-card">
-            <h3>📊 Live System Telemetry Overview</h3>
-            <p style="color: #94a3b8;">
-                This command center processes multi-variable environmental feeds through a trained Random Forest regressor model.
-                Use the sidebar controls to modify sensor inputs and execute custom solar output estimations.
-            </p>
-            <hr style="border-color: rgba(148,163,184,0.2);">
-            <div style="display: flex; justify-content: space-between;">
-                <div>
-                    <span style="color: #64748b; font-size: 0.85rem;">MODEL ACCURACY (R² SCORE)</span><br>
-                    <span style="color: #38bdf8; font-size: 1.6rem; font-weight: bold;">{model_r2:.2f}%</span>
-                </div>
-                <div style="text-align: right;">
-                    <span style="color: #64748b; font-size: 0.85rem;">RECORDS: {record_count}</span><br>
-                    <span style="color: #94a3b8; font-size: 0.95rem;">ALGORITHM: RF_REGRESSOR</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_right:
-        st.markdown(f"""
-        <div class="metric-card">
-            <h3 style="color: #94a3b8 !important; margin-bottom: 4px;">MANUAL SIMULATION OUTPUT</h3>
-            <h1 style="color: #38bdf8 !important; font-size: 3.2rem; margin: 10px 0;">
-                {manual_pred:.2f} <span style="font-size: 1.5rem;">kW</span>
-            </h1>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("🧬 Neural Feature Importance Matrix")
-    st.caption("Relative weight and impact of each environmental sensor parameter on the Random Forest prediction model.")
-    imp_df = pd.DataFrame({
-        "Feature": features,
-        "Importance": model.feature_importances_
-    }).sort_values(by="Importance", ascending=False)
-    st.bar_chart(imp_df.set_index("Feature"))
-
-# --- Footer ---
-st.markdown("---")
-st.markdown(
-    "<p style='text-align: center; color: #64748b;'>"
-    "SPG-X Solar Telemetry Intelligence System | Built independently by Subhadeep Barik"
-    "</p>",
-    unsafe_allow_html=True
-)
+                day_badge = (
+                    "☀️ PEAK NOON SIMULATION (12:0
