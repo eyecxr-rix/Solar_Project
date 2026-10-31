@@ -146,13 +146,15 @@ with tab_live:
             "kolkata": (22.5726, 88.4745, "Kolkata", "India"),
             "delhi": (28.6139, 77.2090, "New Delhi", "India"),
             "mumbai": (19.0760, 72.8777, "Mumbai", "India"),
+            "bangalore": (12.9716, 77.5946, "Bangalore", "India"),
             "bengaluru": (12.9716, 77.5946, "Bengaluru", "India"),
             "london": (51.5074, -0.1278, "London", "United Kingdom"),
             "new york": (40.7128, -74.0060, "New York", "United States")
         }
         
-        if clean_addr in city_fallbacks:
-            return city_fallbacks[clean_addr]
+        for key in city_fallbacks:
+            if key in clean_addr:
+                return city_fallbacks[key]
 
         geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={address}&limit=1&appid=b1b15e88fa797225412429c1c50c122a1"
         try:
@@ -202,6 +204,13 @@ with tab_live:
                 
                 telemetry, status = fetch_nasa_solar_and_weather(lat, lon)
                 
+                # Check current hour (Night-time safety override)
+                current_hour = datetime.datetime.now().hour
+                is_night = current_hour < 6 or current_hour > 18
+                
+                if is_night:
+                    telemetry['irradiation'] = 0.0
+                
                 if telemetry:
                     m1, m2, m3, m4 = st.columns(4)
                     m1.metric("Solar Irradiation", f"{telemetry['irradiation']:.1f} W/m²")
@@ -226,13 +235,13 @@ with tab_live:
                             live_vector.append(50.0)
                             
                     live_df = pd.DataFrame([live_vector], columns=features)
-                    live_pred = model.predict(live_df)[0]
+                    live_pred = 0.0 if is_night else model.predict(live_df)[0]
                     
                     st.markdown("<br>", unsafe_allow_html=True)
                     st.markdown(f"""
                     <div class="metric-card" style="border-color: #38bdf8;">
                         <h3 style="color: #94a3b8 !important; margin-bottom: 0px;">LIVE SATELLITE FORECAST ({city_name.upper()})</h3>
-                        <h1 style="color: #38bdf8 !important; font-size: 3rem; margin-top: 5px;">{max(0.0, live_pred):.2f} <span style="font-size: 1.5rem;">kW</span></h1>
+                        <h1 style="color: #38bdf8 !important; font-size: 3rem; margin-top: 5px;">{max(0.0, live_pred):.2f} <span style="font-size: 1.5rem;">kW</span> {'🌙 (Night Mode: 0 Generation)' if is_night else ''}</h1>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
