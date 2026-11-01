@@ -1,5 +1,6 @@
 ﻿import html
 import math
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -21,7 +22,7 @@ st.set_page_config(
 )
 
 # ==============================================================================
-# 2. FLUID FULL-SCREEN, MOBILE-LOCKED & 3D SCROLL-ROLL DESIGN SYSTEM
+# 2. FLUID FULL-SCREEN, MOBILE-LOCKED & 3D SCROLL-POP DESIGN SYSTEM
 # ==============================================================================
 st.markdown(
     """
@@ -30,10 +31,10 @@ st.markdown(
 
 :root {
     --bg-base: #04070d;
-    --bg-panel: rgba(10, 16, 29, 0.82);
+    --bg-panel: rgba(10, 16, 29, 0.84);
     --bg-panel-solid: #0a101d;
-    --border-subtle: rgba(148, 163, 184, 0.15);
-    --border-hover: rgba(245, 158, 11, 0.65);
+    --border-subtle: rgba(148, 163, 184, 0.16);
+    --border-hover: rgba(245, 158, 11, 0.7);
     --accent-amber: #f59e0b;
     --accent-cyan: #0ea5e9;
     --accent-emerald: #10b981;
@@ -66,38 +67,37 @@ footer {
 .stApp {
     background-color: var(--bg-base);
     background-image:
-        radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.09) 0px, transparent 38%),
-        radial-gradient(circle at 90% 8%, rgba(245, 158, 11, 0.09) 0px, transparent 40%),
-        radial-gradient(circle at 50% 92%, rgba(16, 185, 129, 0.05) 0px, transparent 45%),
-        linear-gradient(rgba(148, 163, 184, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(148, 163, 184, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.1) 0px, transparent 38%),
+        radial-gradient(circle at 90% 8%, rgba(245, 158, 11, 0.1) 0px, transparent 40%),
+        radial-gradient(circle at 50% 92%, rgba(16, 185, 129, 0.06) 0px, transparent 45%),
+        linear-gradient(rgba(148, 163, 184, 0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.022) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 38px 38px, 38px 38px;
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Full-Screen Edge-to-Edge Container with Safe Padding */
 .block-container {
     max-width: 100% !important;
     width: 100% !important;
-    padding-top: 1rem !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    padding-top: 0.9rem !important;
+    padding-left: 1.4rem !important;
+    padding-right: 1.4rem !important;
     padding-bottom: 2.5rem !important;
     margin: 0 auto !important;
 }
 
 /* ==========================================================================
-   3D FLUID ROLL, SHUFFLE & GLOW KEYFRAMES
+   3D SCROLL-ROLL, SPRING POP-UP, FLOATING TILE & HOLO-SWEEP KEYFRAMES
    ========================================================================== */
-@keyframes rollIn3D {
+@keyframes rollPopIn3D {
     0% {
         opacity: 0;
-        transform: perspective(1000px) rotateX(18deg) translateY(28px) scale(0.96);
+        transform: perspective(1000px) rotateX(24deg) translateY(34px) scale(0.92);
     }
-    70% {
+    65% {
         opacity: 1;
-        transform: perspective(1000px) rotateX(-2deg) translateY(-2px) scale(1.003);
+        transform: perspective(1000px) rotateX(-3deg) translateY(-4px) scale(1.015);
     }
     100% {
         opacity: 1;
@@ -105,15 +105,29 @@ footer {
     }
 }
 
-@keyframes cardShuffleIn {
+@keyframes cardShufflePop {
     0% {
         opacity: 0;
-        transform: perspective(900px) rotateY(-12deg) translateY(22px) scale(0.94);
+        transform: perspective(900px) rotateY(-16deg) rotateX(12deg) translateY(28px) scale(0.9);
+    }
+    70% {
+        opacity: 1;
+        transform: perspective(900px) rotateY(2deg) rotateX(-2deg) translateY(-4px) scale(1.02);
     }
     100% {
         opacity: 1;
-        transform: perspective(900px) rotateY(0deg) translateY(0px) scale(1);
+        transform: perspective(900px) rotateY(0deg) rotateX(0deg) translateY(0px) scale(1);
     }
+}
+
+@keyframes tileFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes holoSweep {
+    0% { transform: translateX(-140%) skewX(-22deg); }
+    35%, 100% { transform: translateX(220%) skewX(-22deg); }
 }
 
 @keyframes marqueeRoll {
@@ -122,8 +136,8 @@ footer {
 }
 
 @keyframes statusPulse {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
-    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 9px rgba(16, 185, 129, 0); }
     100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
@@ -133,36 +147,30 @@ footer {
     100% { background-position: 0% 50%; }
 }
 
-/* Scroll-Reveal Dynamic Classes (Triggered by IntersectionObserver + CSS View Timeline) */
 .scroll-roll-card {
-    animation: rollIn3D 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: rollPopIn3D 0.7s cubic-bezier(0.22, 1.28, 0.36, 1) both;
     will-change: transform, opacity;
 }
 
-.in-view-roll {
-    animation: rollIn3D 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-}
-
 /* ==========================================================================
-   HERO HEADER BANNER (PERFECT SYMMETRY ON DESKTOP & MOBILE)
+   HERO HEADER BANNER
    ========================================================================== */
 .corp-header {
     position: relative;
     width: 100%;
     border-radius: 16px;
     background:
-        linear-gradient(105deg, rgba(4, 7, 13, 0.95) 0%, rgba(10, 16, 29, 0.88) 58%, rgba(14, 165, 233, 0.14) 100%),
+        linear-gradient(105deg, rgba(4, 7, 13, 0.95) 0%, rgba(10, 16, 29, 0.88) 58%, rgba(14, 165, 233, 0.15) 100%),
         url('https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=2000&q=80') center 38% / cover no-repeat;
     border: 1px solid rgba(148, 163, 184, 0.22);
-    padding: 1.5rem 1.85rem;
+    padding: 1.45rem 1.8rem;
     margin-bottom: 0.75rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1.15rem;
-    box-shadow: 0 20px 48px -15px rgba(0, 0, 0, 0.78);
-    animation: rollIn3D 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    gap: 1.1rem;
+    box-shadow: 0 20px 48px -15px rgba(0, 0, 0, 0.8);
     overflow: hidden;
 }
 
@@ -173,7 +181,7 @@ footer {
     height: 3px;
     background: linear-gradient(90deg, var(--accent-amber), var(--accent-cyan), var(--accent-emerald), var(--accent-amber));
     background-size: 300% 100%;
-    animation: borderGlowSweep 6s ease infinite;
+    animation: borderGlowSweep 5s ease infinite;
 }
 
 .brand-eyebrow {
@@ -186,7 +194,7 @@ footer {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.35rem;
     line-height: 1.35;
 }
 
@@ -202,18 +210,17 @@ footer {
 
 .brand-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: clamp(1.32rem, 2.2vw, 2.02rem);
+    font-size: clamp(1.3rem, 2.2vw, 2rem);
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
-    margin: 0 0 0.3rem 0;
+    margin: 0 0 0.28rem 0;
     line-height: 1.18;
-    word-break: break-word;
 }
 
 .brand-subtitle {
     color: var(--text-secondary);
-    font-size: clamp(0.78rem, 1vw, 0.88rem);
+    font-size: clamp(0.77rem, 1vw, 0.88rem);
     margin: 0;
     max-width: 680px;
     line-height: 1.45;
@@ -222,12 +229,12 @@ footer {
 .header-meta-grid {
     display: grid;
     grid-template-columns: repeat(3, auto);
-    gap: 1.25rem;
-    background: rgba(4, 7, 13, 0.84);
+    gap: 1.2rem;
+    background: rgba(4, 7, 13, 0.85);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    border: 1px solid rgba(148, 163, 184, 0.22);
     border-radius: 12px;
-    padding: 0.7rem 1.15rem;
+    padding: 0.7rem 1.1rem;
 }
 
 .meta-item {
@@ -237,7 +244,7 @@ footer {
 
 .meta-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.6rem;
+    font-size: 0.59rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
@@ -245,21 +252,21 @@ footer {
 
 .meta-val {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.79rem;
     font-weight: 600;
     color: var(--text-primary);
     margin-top: 2px;
 }
 
 /* ==========================================================================
-   INFINITE ROLLING MARQUEE TICKER (CONTAINED & ZERO OVERFLOW)
+   INFINITE ROLLING MARQUEE TICKER
    ========================================================================== */
 .marquee-shell {
     display: flex;
     align-items: center;
     width: 100%;
-    background: rgba(10, 16, 29, 0.82);
-    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(10, 16, 29, 0.84);
+    border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 10px;
     padding: 0.45rem 0.85rem;
     margin-bottom: 1rem;
@@ -269,7 +276,7 @@ footer {
 
 .marquee-pin {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.66rem;
+    font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.09em;
     color: var(--accent-amber);
@@ -277,7 +284,7 @@ footer {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding-right: 0.85rem;
+    padding-right: 0.8rem;
     border-right: 1px solid rgba(148, 163, 184, 0.2);
     white-space: nowrap;
     z-index: 2;
@@ -296,7 +303,7 @@ footer {
     width: max-content;
     gap: 0.6rem;
     padding-left: 0.75rem;
-    animation: marqueeRoll 25s linear infinite;
+    animation: marqueeRoll 24s linear infinite;
 }
 
 .marquee-shell:hover .marquee-track {
@@ -308,20 +315,20 @@ footer {
     align-items: center;
     gap: 6px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.69rem;
     color: #e2e8f0;
     background: rgba(15, 23, 42, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.2);
     padding: 3px 11px;
     border-radius: 999px;
     white-space: nowrap;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.25s cubic-bezier(0.22, 1.28, 0.36, 1);
 }
 
 .api-badge:hover {
     border-color: var(--accent-amber);
     color: #ffffff;
-    transform: translateY(-2px) scale(1.03);
+    transform: translateY(-2px) scale(1.05);
 }
 
 .api-dot {
@@ -333,40 +340,27 @@ footer {
 }
 
 /* ==========================================================================
-   3D GLASS PANELS & MINIMAL TARGET BAR
+   COMPACT SECTION HEADER STRIP (ZERO EMPTY BOX GAP)
    ========================================================================== */
-.corp-panel {
+.section-strip {
     width: 100%;
-    background: var(--bg-panel);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--border-subtle);
-    border-radius: 14px;
-    padding: 1.15rem 1.3rem;
-    margin-bottom: 1rem;
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.35s ease;
-    animation: rollIn3D 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.corp-panel:hover {
-    border-color: rgba(148, 163, 184, 0.32);
-    transform: translateY(-2px);
-    box-shadow: 0 18px 36px -12px rgba(0, 0, 0, 0.65);
-}
-
-.panel-header {
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.92) 0%, rgba(10, 16, 29, 0.82) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-left: 3px solid var(--accent-amber);
+    border-radius: 11px;
+    padding: 0.68rem 1rem;
+    margin-bottom: 0.55rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 0.85rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.6);
 }
 
 .panel-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.94rem;
+    font-size: 0.93rem;
     font-weight: 700;
     color: var(--text-primary);
     display: flex;
@@ -376,18 +370,36 @@ footer {
 
 .panel-tag {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.63rem;
+    font-size: 0.62rem;
     color: var(--accent-cyan);
-    background: rgba(14, 165, 233, 0.1);
-    border: 1px solid rgba(14, 165, 233, 0.3);
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(14, 165, 233, 0.35);
     padding: 3px 9px;
     border-radius: 999px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
+.map-caption-strip {
+    width: 100%;
+    background: rgba(10, 16, 29, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 9px;
+    padding: 0.48rem 0.85rem;
+    margin-top: -0.35rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
 /* ==========================================================================
-   KPI TELEMETRY DECK (5-COL DESKTOP -> 2-COL VERTICAL BENTO ON MOBILE)
+   KPI TELEMETRY DECK (HOLO-SWEEP + FLOATING TILES + POP-UP HOVER)
    ========================================================================== */
 .kpi-grid {
     display: grid;
@@ -399,7 +411,7 @@ footer {
 }
 
 .kpi-card {
-    background: linear-gradient(160deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 16, 29, 0.95) 100%);
+    background: linear-gradient(160deg, rgba(15, 23, 42, 0.92) 0%, rgba(10, 16, 29, 0.96) 100%);
     border: 1px solid var(--border-subtle);
     border-radius: 13px;
     padding: 0.95rem 1.05rem;
@@ -407,34 +419,50 @@ footer {
     overflow: hidden;
     min-width: 0;
     transform-style: preserve-3d;
-    transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.36s ease;
-    animation: cardShuffleIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: transform 0.38s cubic-bezier(0.22, 1.28, 0.36, 1), border-color 0.3s ease, box-shadow 0.38s ease;
+    animation: cardShufflePop 0.65s cubic-bezier(0.22, 1.28, 0.36, 1) both, tileFloat 5.5s ease-in-out infinite;
 }
 
-.kpi-card:nth-child(1) { animation-delay: 0.04s; }
-.kpi-card:nth-child(2) { animation-delay: 0.09s; }
-.kpi-card:nth-child(3) { animation-delay: 0.14s; }
-.kpi-card:nth-child(4) { animation-delay: 0.19s; }
-.kpi-card:nth-child(5) { animation-delay: 0.24s; }
+.kpi-card:nth-child(1) { animation-delay: 0.04s, 0.0s; }
+.kpi-card:nth-child(2) { animation-delay: 0.10s, 0.7s; }
+.kpi-card:nth-child(3) { animation-delay: 0.16s, 1.4s; }
+.kpi-card:nth-child(4) { animation-delay: 0.22s, 2.1s; }
+.kpi-card:nth-child(5) { animation-delay: 0.28s, 2.8s; }
+
+/* Holographic Sheen Sweep Across Tiles */
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 45%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.055), transparent);
+    transform: translateX(-140%) skewX(-22deg);
+    animation: holoSweep 7s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.kpi-card:nth-child(2)::before { animation-delay: 1.2s; }
+.kpi-card:nth-child(3)::before { animation-delay: 2.4s; }
+.kpi-card:nth-child(4)::before { animation-delay: 3.6s; }
+.kpi-card:nth-child(5)::before { animation-delay: 4.8s; }
 
 .kpi-card::after {
     content: "";
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--accent-amber), var(--accent-cyan));
+    background: linear-gradient(90deg, var(--accent-amber), var(--accent-cyan), var(--accent-emerald));
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.35s cubic-bezier(0.22, 1.28, 0.36, 1);
 }
 
-.kpi-card:hover {
-    transform: perspective(800px) rotateX(6deg) rotateY(-4deg) translateY(-5px);
+.kpi-card:hover, .kpi-card:active {
+    transform: perspective(800px) rotateX(7deg) rotateY(-5deg) translateY(-7px) scale(1.035) !important;
     border-color: var(--border-hover);
-    box-shadow: 0 16px 32px -10px rgba(0, 0, 0, 0.75), 0 0 20px rgba(245, 158, 11, 0.14);
+    box-shadow: 0 18px 34px -8px rgba(0, 0, 0, 0.8), 0 0 24px rgba(245, 158, 11, 0.18);
 }
 
-.kpi-card:hover::after {
+.kpi-card:hover::after, .kpi-card:active::after {
     transform: scaleX(1);
 }
 
@@ -479,9 +507,11 @@ footer {
 
 /* Primary Power Yield Readout Hero */
 .yield-hero {
+    position: relative;
+    overflow: hidden;
     width: 100%;
-    background: linear-gradient(125deg, rgba(10, 16, 29, 0.96) 0%, rgba(15, 23, 42, 0.92) 55%, rgba(245, 158, 11, 0.16) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.42);
+    background: linear-gradient(125deg, rgba(10, 16, 29, 0.96) 0%, rgba(15, 23, 42, 0.92) 55%, rgba(245, 158, 11, 0.18) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.45);
     border-left: 5px solid var(--accent-amber);
     border-radius: 14px;
     padding: 1.3rem 1.65rem;
@@ -491,14 +521,23 @@ footer {
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    box-shadow: 0 20px 44px -12px rgba(0, 0, 0, 0.65);
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
-    animation: rollIn3D 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    box-shadow: 0 20px 44px -12px rgba(0, 0, 0, 0.68);
+    transition: transform 0.38s cubic-bezier(0.22, 1.28, 0.36, 1), box-shadow 0.38s ease;
+}
+
+.yield-hero::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 35%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.09), transparent);
+    transform: translateX(-140%) skewX(-22deg);
+    animation: holoSweep 6.5s ease-in-out infinite;
+    pointer-events: none;
 }
 
 .yield-hero:hover {
-    transform: perspective(1000px) rotateX(2deg) translateY(-3px);
-    box-shadow: 0 22px 48px -10px rgba(245, 158, 11, 0.22);
+    transform: perspective(1000px) rotateX(3deg) translateY(-4px) scale(1.01);
+    box-shadow: 0 24px 52px -10px rgba(245, 158, 11, 0.25);
 }
 
 .yield-eyebrow {
@@ -534,7 +573,7 @@ footer {
     color: #ffffff;
     line-height: 1;
     letter-spacing: -0.03em;
-    text-shadow: 0 0 28px rgba(245, 158, 11, 0.35);
+    text-shadow: 0 0 28px rgba(245, 158, 11, 0.38);
 }
 
 .yield-unit {
@@ -552,7 +591,7 @@ footer {
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.6rem;
-    background: rgba(10, 16, 29, 0.9);
+    background: rgba(10, 16, 29, 0.92);
     border: 1px solid var(--border-subtle);
     border-radius: 10px;
     padding: 0.65rem 1.05rem;
@@ -582,7 +621,7 @@ footer {
     font-size: 0.67rem;
 }
 
-/* Segmented Corporate Tabs (Wraps Cleanly on Mobile Without Horizontal Page Scroll) */
+/* Segmented Corporate Tabs */
 div[data-testid="stTabs"] > div[role="tablist"] {
     background: var(--bg-panel-solid);
     border: 1px solid var(--border-subtle);
@@ -603,7 +642,7 @@ div[data-testid="stTabs"] button[role="tab"] {
     color: var(--text-secondary) !important;
     border: 1px solid transparent !important;
     background: transparent !important;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: all 0.25s cubic-bezier(0.22, 1.28, 0.36, 1) !important;
 }
 
 div[data-testid="stTabs"] button[role="tab"]:hover {
@@ -638,17 +677,17 @@ div[data-testid="stTabs"] div[data-baseweb="tab-highlight"] {
 }
 
 .arch-card {
-    background: rgba(10, 16, 29, 0.82);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    background: rgba(10, 16, 29, 0.84);
+    border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 12px;
     padding: 1rem 1.1rem;
-    transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.36s cubic-bezier(0.22, 1.28, 0.36, 1);
 }
 
 .arch-card:hover {
-    border-color: rgba(245, 158, 11, 0.55);
-    transform: perspective(800px) rotateX(4deg) translateY(-5px);
-    box-shadow: 0 14px 28px -8px rgba(0, 0, 0, 0.6);
+    border-color: rgba(245, 158, 11, 0.6);
+    transform: perspective(800px) rotateX(5deg) translateY(-6px) scale(1.02);
+    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.65);
 }
 
 .arch-role {
@@ -690,7 +729,7 @@ div[data-testid="stSelectbox"] > div > div {
    ========================================================================== */
 @media (max-width: 768px) {
     .block-container {
-        padding-top: 0.65rem !important;
+        padding-top: 0.6rem !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
         padding-bottom: 2rem !important;
@@ -703,7 +742,7 @@ div[data-testid="stSelectbox"] > div > div {
     }
 
     .brand-eyebrow {
-        font-size: 0.62rem;
+        font-size: 0.61rem;
         letter-spacing: 0.08em;
     }
 
@@ -726,7 +765,6 @@ div[data-testid="stSelectbox"] > div > div {
     .meta-label { font-size: 0.53rem; }
     .meta-val { font-size: 0.66rem; word-break: break-word; }
 
-    /* 2-Column Symmetrical Bento Grid on Mobile (Zero Horizontal Bleed) */
     .kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 0.65rem;
@@ -857,8 +895,8 @@ def reverse_geocode_coords(lat: float, lon: float) -> str:
     try:
         r = requests.get(
             "https://nominatim.openstreetmap.org/reverse",
-            params={"lat": lat, "lon": lon, "format": "jsonv2", "zoom": 14},
-            headers={"User-Agent": "SPGX-Solar-Workbench/4.0"},
+            params={"lat": lat, "lon": lon, "format": "jsonv2", "zoom": 15},
+            headers={"User-Agent": "SPGX-Solar-Workbench/5.0"},
             timeout=5,
         )
         if r.status_code == 200:
@@ -867,19 +905,35 @@ def reverse_geocode_coords(lat: float, lon: float) -> str:
             area = (
                 addr.get("suburb")
                 or addr.get("neighbourhood")
+                or addr.get("residential")
                 or addr.get("town")
                 or addr.get("city_district")
+                or addr.get("village")
                 or addr.get("city")
                 or data.get("name")
             )
             city = addr.get("city") or addr.get("state_district") or addr.get("state") or ""
-            if area and city and area != city:
+            if area and city and area.lower() != city.lower():
                 return f"{area}, {city}"
             if area:
                 return str(area)
     except Exception:
         pass
-    return f"GPS Lock ({lat:.4f}N, {lon:.4f}E)"
+    return f"Live GPS ({lat:.4f}N, {lon:.4f}E)"
+
+
+def parse_direct_gps_query(query: str):
+    """Parse queries like 'GPS: 22.5867, 88.4750' or '22.5867, 88.4750' directly into coordinates."""
+    q = (query or "").strip()
+    m = re.search(r"(-?\d+\.\d+)\s*[,/;\s]\s*(-?\d+\.\d+)", q)
+    if m:
+        try:
+            lat, lon = float(m.group(1)), float(m.group(2))
+            if -90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0:
+                return lat, lon
+        except Exception:
+            pass
+    return None
 
 
 def compute_solar_angles(lat: float, lon: float, dt_utc: datetime, panel_tilt: float = 25.0, panel_azimuth: float = 180.0):
@@ -945,15 +999,33 @@ def predict_power_kw(telemetry_dict: dict, is_day: int = 1, geometry_scale: floa
 @st.cache_data(ttl=900, show_spinner=False)
 def search_locations_multi_engine(query: str, prioritize_india: bool = True, prioritize_nearby: bool = True, gmaps_api_key: str = ""):
     q = (query or "").strip()
+
+    # Direct GPS Coordinate Bridge (Triggered when user clicks Detect My Live GPS Location)
+    parsed_gps = parse_direct_gps_query(q)
+    if parsed_gps is not None:
+        g_lat, g_lon = parsed_gps
+        place_name = reverse_geocode_coords(g_lat, g_lon)
+        return [
+            {
+                "label": f"{place_name} ({g_lat:.5f}N, {g_lon:.5f}E)",
+                "short_name": place_name,
+                "lat": g_lat,
+                "lon": g_lon,
+                "country": "India",
+                "dist_km": haversine_km(HOME_BASE_LAT, HOME_BASE_LON, g_lat, g_lon),
+                "source": "LIVE-GPS",
+            }
+        ]
+
     if len(q) < 2:
         return CURATED_NEARBY_HUBS[:6]
 
     results, seen = [], set()
 
     def add_candidate(label, short, lat, lon, country, source):
-        if (round(lat, 2), round(lon, 2)) in seen:
+        if (round(lat, 3), round(lon, 3)) in seen:
             return
-        seen.add((round(lat, 2), round(lon, 2)))
+        seen.add((round(lat, 3), round(lon, 3)))
         results.append(
             {
                 "label": label,
@@ -1183,7 +1255,7 @@ def fetch_nasa_power_recent(lat: float, lon: float):
 
 
 # ==============================================================================
-# 5. INITIALIZE URL GPS QUERY PARAMS (AUTOMATIC BROWSER GEOLOCATION HANDLER)
+# 5. INITIALIZE GPS & SEARCH SESSION STATE
 # ==============================================================================
 if "gps_locked" not in st.session_state:
     st.session_state.gps_locked = False
@@ -1191,8 +1263,8 @@ if "gps_lat" not in st.session_state:
     st.session_state.gps_lat = HOME_BASE_LAT
 if "gps_lon" not in st.session_state:
     st.session_state.gps_lon = HOME_BASE_LON
-if "gps_name" not in st.session_state:
-    st.session_state.gps_name = "New Town, Kolkata"
+if "search_query_box" not in st.session_state:
+    st.session_state.search_query_box = "New Town, Rajarhat, Kolkata"
 
 qp = st.query_params
 if "gps_lat" in qp and "gps_lon" in qp:
@@ -1202,8 +1274,11 @@ if "gps_lat" in qp and "gps_lon" in qp:
         if -90.0 <= parsed_lat <= 90.0 and -180.0 <= parsed_lon <= 180.0:
             st.session_state.gps_lat = parsed_lat
             st.session_state.gps_lon = parsed_lon
-            st.session_state.gps_name = reverse_geocode_coords(parsed_lat, parsed_lon)
             st.session_state.gps_locked = True
+            gps_tag = f"GPS: {parsed_lat:.5f}, {parsed_lon:.5f}"
+            if st.session_state.get("last_qp_gps") != gps_tag:
+                st.session_state.last_qp_gps = gps_tag
+                st.session_state.search_query_box = gps_tag
     except Exception:
         pass
 
@@ -1238,17 +1313,15 @@ st.markdown(
             <span class="api-badge"><span class="api-dot"></span>Open-Meteo NWP Weather API</span>
             <span class="api-badge"><span class="api-dot"></span>NASA LaRC POWER Satellite Archive</span>
             <span class="api-badge"><span class="api-dot"></span>HTML5 Browser GPS Geolocation</span>
-            <span class="api-badge"><span class="api-dot"></span>Google Maps &amp; OSM Nominatim Geocoder</span>
+            <span class="api-badge"><span class="api-dot"></span>OpenStreetMap Contributors &amp; CARTO Maps</span>
             <span class="api-badge"><span class="api-dot"></span>Komoot Photon Spatial Search</span>
             <span class="api-badge"><span class="api-dot"></span>Scikit-Learn Random Forest (20-Feature Ensemble)</span>
-            <span class="api-badge"><span class="api-dot"></span>Plotly WebGL &amp; CARTO DarkMatter Vector Maps</span>
             <span class="api-badge"><span class="api-dot"></span>Open-Meteo NWP Weather API</span>
             <span class="api-badge"><span class="api-dot"></span>NASA LaRC POWER Satellite Archive</span>
             <span class="api-badge"><span class="api-dot"></span>HTML5 Browser GPS Geolocation</span>
-            <span class="api-badge"><span class="api-dot"></span>Google Maps &amp; OSM Nominatim Geocoder</span>
+            <span class="api-badge"><span class="api-dot"></span>OpenStreetMap Contributors &amp; CARTO Maps</span>
             <span class="api-badge"><span class="api-dot"></span>Komoot Photon Spatial Search</span>
             <span class="api-badge"><span class="api-dot"></span>Scikit-Learn Random Forest (20-Feature Ensemble)</span>
-            <span class="api-badge"><span class="api-dot"></span>Plotly WebGL &amp; CARTO DarkMatter Vector Maps</span>
         </div>
     </div>
 </div>
@@ -1268,7 +1341,7 @@ tab_live, tab_matrix, tab_nasa = st.tabs(
 )
 
 # ------------------------------------------------------------------------------
-# TAB 1: FULL-SCREEN BENTO TELEMETRY, LIVE GPS & SPATIAL WORKBENCH
+# TAB 1: FULL-SCREEN BENTO TELEMETRY, LIVE GPS & CARTO MAP WORKBENCH
 # ------------------------------------------------------------------------------
 with tab_live:
     col_left, col_right = st.columns([1.05, 2.15], gap="large")
@@ -1276,109 +1349,183 @@ with tab_live:
     with col_left:
         st.markdown(
             """
-        <div class="corp-panel scroll-roll-card">
-            <div class="panel-header">
-                <div class="panel-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
-                    Spatial Target &amp; Live GPS Lock
-                </div>
-                <span class="panel-tag">GPS + MULTI-GEOCODER</span>
+        <div class="section-strip scroll-roll-card">
+            <div class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+                Spatial Target &amp; Live GPS Lock
             </div>
+            <span class="panel-tag">GPS + CARTO MAP</span>
+        </div>
         """,
             unsafe_allow_html=True,
         )
 
-        # HTML5 Browser Geolocation Permission Widget + IntersectionObserver 3D Scroll Engine
+        # Unclipped Full-Width Mobile/Desktop GPS Button + Dynamic 3D Scroll-Pop Engine
         components.html(
             """
-            <div style="font-family:'JetBrains Mono',monospace; margin:0; padding:0;">
-                <button id="gpsBtn" onclick="requestLiveGPS()" style="
-                    width:100%;
-                    padding:10px 14px;
-                    border-radius:9px;
-                    border:1px solid rgba(16, 185, 129, 0.55);
-                    background:linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(14, 165, 233, 0.14) 100%);
-                    color:#f8fafc;
-                    font-family:'JetBrains Mono',monospace;
-                    font-size:12px;
-                    font-weight:700;
-                    letter-spacing:0.06em;
-                    cursor:pointer;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    gap:8px;
-                    transition:all 0.25s ease;
-                ">
-                    <span style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;display:inline-block;"></span>
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body {
+                    background: transparent;
+                    padding: 4px 2px 6px 2px;
+                    overflow: hidden;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .gps-btn {
+                    width: 100%;
+                    min-height: 48px;
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    border: 1.5px solid rgba(16, 185, 129, 0.65);
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(14, 165, 233, 0.18) 100%);
+                    color: #f8fafc;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: clamp(10.5px, 2.7vw, 12px);
+                    font-weight: 700;
+                    letter-spacing: 0.05em;
+                    line-height: 1.3;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    gap: 9px;
+                    box-shadow: 0 6px 18px -4px rgba(16, 185, 129, 0.28);
+                    transition: all 0.25s cubic-bezier(0.22, 1.28, 0.36, 1);
+                }
+                .gps-btn:hover, .gps-btn:active {
+                    border-color: #f59e0b;
+                    transform: translateY(-2px) scale(1.01);
+                    box-shadow: 0 10px 22px -4px rgba(245, 158, 11, 0.35);
+                }
+                .gps-dot {
+                    width: 9px;
+                    height: 9px;
+                    min-width: 9px;
+                    border-radius: 50%;
+                    background: #10b981;
+                    box-shadow: 0 0 10px #10b981;
+                }
+            </style>
+            </head>
+            <body>
+                <button id="gpsBtn" class="gps-btn" onclick="requestLiveGPS()">
+                    <span id="gpsDot" class="gps-dot"></span>
                     <span id="gpsBtnText">DETECT MY LIVE GPS LOCATION (AUTO-FEED)</span>
                 </button>
-            </div>
-            <script>
-            function requestLiveGPS() {
-                const btnText = document.getElementById('gpsBtnText');
-                if (!navigator.geolocation) {
-                    btnText.innerText = 'GPS NOT SUPPORTED BY BROWSER';
-                    return;
+
+                <script>
+                function feedCoordsToStreamlit(lat, lon) {
+                    const formatted = 'GPS: ' + lat + ', ' + lon;
+                    try {
+                        const parentDoc = window.parent.document;
+                        const inputs = parentDoc.querySelectorAll('input[type="text"]');
+                        for (let inp of inputs) {
+                            const label = inp.getAttribute('aria-label') || '';
+                            if (label.includes('Search Any City') || inputs.length === 1) {
+                                const setter = Object.getOwnPropertyDescriptor(window.parent.HTMLInputElement.prototype, 'value').set;
+                                setter.call(inp, formatted);
+                                inp.dispatchEvent(new Event('input', { bubbles: true }));
+                                inp.dispatchEvent(new Event('change', { bubbles: true }));
+                                inp.focus();
+                                inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                                inp.blur();
+                                return true;
+                            }
+                        }
+                    } catch (e) {}
+
+                    try {
+                        const parentUrl = new URL(window.parent.location.href);
+                        parentUrl.searchParams.set('gps_lat', lat);
+                        parentUrl.searchParams.set('gps_lon', lon);
+                        window.parent.location.href = parentUrl.toString();
+                    } catch (e) {
+                        window.location.search = '?gps_lat=' + lat + '&gps_lon=' + lon;
+                    }
+                    return false;
                 }
-                btnText.innerText = 'REQUESTING LOCATION PERMISSION...';
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        const lat = pos.coords.latitude.toFixed(5);
-                        const lon = pos.coords.longitude.toFixed(5);
-                        btnText.innerText = 'LOCKED: ' + lat + 'N, ' + lon + 'E // SYNCING...';
-                        try {
-                            const parentUrl = new URL(window.parent.location.href);
-                            parentUrl.searchParams.set('gps_lat', lat);
-                            parentUrl.searchParams.set('gps_lon', lon);
-                            window.parent.location.href = parentUrl.toString();
-                        } catch (e) {
-                            window.location.search = '?gps_lat=' + lat + '&gps_lon=' + lon;
-                        }
-                    },
-                    function(err) {
-                        btnText.innerText = 'PERMISSION DENIED // USE SEARCH OR MANUAL GPS';
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            }
 
-            // Attach 3D Scroll-Roll IntersectionObserver to parent Streamlit document
-            try {
-                const parentDoc = window.parent.document;
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.style.opacity = '1';
-                            entry.target.style.transform = 'perspective(1000px) rotateX(0deg) translateY(0px) scale(1)';
-                        } else {
-                            entry.target.style.opacity = '0.82';
-                            entry.target.style.transform = 'perspective(1000px) rotateX(8deg) translateY(14px) scale(0.985)';
-                        }
-                    });
-                }, { threshold: 0.12 });
+                function requestLiveGPS() {
+                    const btnText = document.getElementById('gpsBtnText');
+                    const dot = document.getElementById('gpsDot');
+                    const geo = (window.parent && window.parent.navigator && window.parent.navigator.geolocation)
+                                ? window.parent.navigator.geolocation
+                                : navigator.geolocation;
 
-                setTimeout(() => {
-                    parentDoc.querySelectorAll('.corp-panel, .kpi-card, .yield-hero, .arch-card').forEach((el) => {
-                        el.style.transition = 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease, border-color 0.3s ease';
-                        observer.observe(el);
-                    });
-                }, 400);
-            } catch (e) {}
-            </script>
+                    if (!geo) {
+                        btnText.innerText = 'GPS NOT SUPPORTED BY BROWSER';
+                        return;
+                    }
+
+                    btnText.innerText = 'ACQUIRING SATELLITE / BROWSER GPS...';
+                    dot.style.background = '#f59e0b';
+                    dot.style.boxShadow = '0 0 12px #f59e0b';
+
+                    geo.getCurrentPosition(
+                        function(pos) {
+                            const lat = pos.coords.latitude.toFixed(5);
+                            const lon = pos.coords.longitude.toFixed(5);
+                            dot.style.background = '#10b981';
+                            btnText.innerText = 'LIVE GPS LOCKED: ' + lat + '°N, ' + lon + '°E';
+                            feedCoordsToStreamlit(lat, lon);
+                        },
+                        function(err) {
+                            dot.style.background = '#ef4444';
+                            btnText.innerText = 'LOCATION BLOCKED // ENABLE PERMISSION IN BROWSER';
+                        },
+                        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+                    );
+                }
+
+                // Dynamic 3D Scroll-Roll & Pop-Up Physics Engine on Parent Page
+                try {
+                    const parentDoc = window.parent.document;
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                entry.target.style.opacity = '1';
+                                entry.target.style.transform = 'perspective(950px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1)';
+                            } else {
+                                const rect = entry.boundingClientRect;
+                                const tiltDir = rect.top > 0 ? 14 : -12;
+                                entry.target.style.opacity = '0.72';
+                                entry.target.style.transform = 'perspective(950px) rotateX(' + tiltDir + 'deg) translateY(' + (rect.top > 0 ? '20px' : '-14px') + ') scale(0.95)';
+                            }
+                        });
+                    }, { threshold: [0.08, 0.25] });
+
+                    const attachAnimations = () => {
+                        const selector = '.section-strip, .kpi-card, .yield-hero, .arch-card, .telemetry-bar, [data-testid="stPlotlyChart"], [data-testid="stNumberInput"], [data-testid="stSelectbox"], [data-testid="stTextInput"]';
+                        parentDoc.querySelectorAll(selector).forEach((el) => {
+                            if (!el.dataset.rollAttached) {
+                                el.dataset.rollAttached = '1';
+                                el.style.transition = 'transform 0.52s cubic-bezier(0.22, 1.28, 0.36, 1), opacity 0.45s ease, border-color 0.3s ease, box-shadow 0.35s ease';
+                                observer.observe(el);
+                            }
+                        });
+                    };
+
+                    setTimeout(attachAnimations, 250);
+                    setInterval(attachAnimations, 1500);
+                } catch (e) {}
+                </script>
+            </body>
+            </html>
             """,
-            height=48,
+            height=64,
         )
 
-        # Minimal, Organized Target Selector (Replaces Cluttered 4-Button Grid)
-        hub_names = ["Search / Custom Query", "Live GPS Coordinates"] + [h["short_name"] for h in CURATED_NEARBY_HUBS]
-        default_mode_idx = 1 if st.session_state.gps_locked else 0
-
+        hub_names = ["Search / Live GPS Query", "Manual GPS Coordinates"] + [h["short_name"] for h in CURATED_NEARBY_HUBS]
         selected_hub_mode = st.selectbox(
             "Target Acquisition Mode / Regional Grid Hub",
             options=hub_names,
-            index=default_mode_idx,
-            help="Choose a curated regional substation hub, use Live Browser GPS, or type any custom location below.",
+            index=0,
+            help="Tap 'DETECT MY LIVE GPS LOCATION' above to auto-feed your live coordinates, search any place, or pick a regional hub.",
         )
 
         c_opt1, c_opt2, c_opt3 = st.columns(3)
@@ -1389,7 +1536,7 @@ with tab_live:
         with c_opt3:
             sim_noon = st.checkbox("Peak Noon", value=False)
 
-        if selected_hub_mode == "Live GPS Coordinates":
+        if selected_hub_mode == "Manual GPS Coordinates":
             g_lat_col, g_lon_col = st.columns(2)
             with g_lat_col:
                 lat_val = st.number_input("GPS Latitude", value=float(st.session_state.gps_lat), format="%.5f", step=0.01)
@@ -1397,16 +1544,14 @@ with tab_live:
                 lon_val = st.number_input("GPS Longitude", value=float(st.session_state.gps_lon), format="%.5f", step=0.01)
             short_name = reverse_geocode_coords(lat_val, lon_val)
             active_loc = {
-                "label": f"{short_name} (Live GPS Coordinates)",
+                "label": f"{short_name} ({lat_val:.5f}N, {lon_val:.5f}E)",
                 "short_name": short_name,
                 "lat": lat_val,
                 "lon": lon_val,
                 "dist_km": haversine_km(HOME_BASE_LAT, HOME_BASE_LON, lat_val, lon_val),
                 "source": "LIVE-GPS",
             }
-            st.success(f"Locked onto GPS Target: **{short_name}** (`{lat_val:.4f}°N, {lon_val:.4f}°E`)")
-
-        elif selected_hub_mode != "Search / Custom Query":
+        elif selected_hub_mode != "Search / Live GPS Query":
             matched_hub = next((h for h in CURATED_NEARBY_HUBS if h["short_name"] == selected_hub_mode), CURATED_NEARBY_HUBS[0])
             lat_val, lon_val, short_name = matched_hub["lat"], matched_hub["lon"], matched_hub["short_name"]
             active_loc = {
@@ -1414,13 +1559,11 @@ with tab_live:
                 "dist_km": haversine_km(HOME_BASE_LAT, HOME_BASE_LON, lat_val, lon_val),
                 "source": "GRID-HUB",
             }
-            st.info(f"Substation Hub Locked: **{matched_hub['label']}**")
-
         else:
             search_q = st.text_input(
                 "Search Any City, Substation, Landmark, College, or PIN Code",
-                value="New Town, Rajarhat, Kolkata",
-                placeholder="e.g., Techno India University, Haldia, Salt Lake, Bhadla...",
+                key="search_query_box",
+                placeholder="e.g., Techno India University, Haldia, or tap Detect Live GPS above...",
             )
             with st.expander("Advanced: Optional Google Maps API Key"):
                 gmaps_key = st.text_input("Google Maps Geocoding Key (Leave blank for OSM + Photon)", value="", type="password")
@@ -1428,7 +1571,7 @@ with tab_live:
             candidates = search_locations_multi_engine(
                 search_q, prioritize_india=prio_india, prioritize_nearby=prio_nearby, gmaps_api_key=gmaps_key
             )
-            formatted_options = [f"{c['short_name']} — {c['label'][:58]} [{c.get('dist_km', 0):.0f} km • {c.get('source', 'GEO')}]" for c in candidates]
+            formatted_options = [f"{c['short_name']} — {c['label'][:55]} [{c.get('dist_km', 0):.0f} km • {c.get('source', 'GEO')}]" for c in candidates]
             selected_disp = st.selectbox(
                 f"Matched Spatial Targets ({len(formatted_options)} found):",
                 options=formatted_options,
@@ -1436,6 +1579,8 @@ with tab_live:
             )
             active_loc = dict(zip(formatted_options, candidates)).get(selected_disp, candidates[0])
             lat_val, lon_val, short_name = active_loc["lat"], active_loc["lon"], active_loc["short_name"]
+
+        is_gps_source = active_loc.get("source") == "LIVE-GPS"
 
         st.markdown("##### PV Array Hardware Geometry")
         g_col1, g_col2 = st.columns(2)
@@ -1445,24 +1590,59 @@ with tab_live:
             panel_az = st.slider("Module Azimuth (deg)", 90, 270, 180)
         geometry_factor = max(0.75, min(1.08, float(np.cos(np.radians(abs(panel_tilt - max(10.0, abs(lat_val))))))))
 
-        map_fig = go.Figure(
+        # Multi-Ring Radar Target Lock on OpenStreetMap + CARTO Vector Map
+        pin_label = f"LIVE GPS: {short_name}" if is_gps_source else short_name
+        core_color = "#10b981" if is_gps_source else "#f59e0b"
+        halo_color = "rgba(16, 185, 129, 0.24)" if is_gps_source else "rgba(245, 158, 11, 0.22)"
+
+        map_fig = go.Figure()
+        # Outer Radar Pulse Halo
+        map_fig.add_trace(
+            go.Scattermap(
+                lat=[lat_val],
+                lon=[lon_val],
+                mode="markers",
+                marker=dict(size=36, color=halo_color),
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
+        # Inner Target Ring + Label
+        map_fig.add_trace(
             go.Scattermap(
                 lat=[lat_val],
                 lon=[lon_val],
                 mode="markers+text",
-                marker=dict(size=14, color="#f59e0b"),
-                text=[short_name],
+                marker=dict(size=13, color=core_color),
+                text=[f"  {pin_label}"],
+                textfont=dict(family="JetBrains Mono, monospace", size=12, color="#ffffff"),
                 textposition="top right",
+                hovertemplate=f"<b>{html.escape(short_name)}</b><br>Lat: {lat_val:.5f}°N<br>Lon: {lon_val:.5f}°E<extra></extra>",
+                showlegend=False,
             )
         )
         map_fig.update_layout(
-            map=dict(style="carto-darkmatter", center=dict(lat=lat_val, lon=lon_val), zoom=10.8),
+            map=dict(
+                style="carto-darkmatter",
+                center=dict(lat=lat_val, lon=lon_val),
+                zoom=13.4 if is_gps_source else 10.8,
+            ),
+            uirevision=f"{lat_val:.5f}_{lon_val:.5f}",
             margin=dict(l=0, r=0, t=0, b=0),
-            height=220,
+            height=240,
             paper_bgcolor="rgba(0,0,0,0)",
         )
-        st.plotly_chart(map_fig, use_container_width=True, config={"displayModeBar": False})
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.plotly_chart(map_fig, use_container_width=True, config={"displayModeBar": False, "scrollZoom": True})
+
+        st.markdown(
+            f"""
+            <div class="map-caption-strip">
+                <span><strong style="color:#10b981;">&#9679; MAP LOCK:</strong> {html.escape(short_name.upper())} ({lat_val:.4f}&deg;N, {lon_val:.4f}&deg;E)</span>
+                <span>&copy; OpenStreetMap contributors &bull; CARTO</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     with col_right:
         try:
@@ -1640,7 +1820,7 @@ with tab_live:
                     text="48-HOUR DIURNAL GENERATION PROFILE (SPLINE INTERPOLATION)",
                     font=dict(family="JetBrains Mono, monospace", size=11, color="#94a3b8"),
                 ),
-                paper_bgcolor="rgba(10, 16, 29, 0.82)",
+                paper_bgcolor="rgba(10, 16, 29, 0.84)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 height=345,
                 margin=dict(l=12, r=12, t=42, b=14),
@@ -1671,7 +1851,7 @@ with tab_matrix:
             ("Multi-Altitude Wind Profile", "ANEMOMETER & HUB SHEAR"),
         ]:
             st.markdown(
-                f"""<div class="corp-panel scroll-roll-card"><div class="panel-header"><div class="panel-title">{html.escape(cat_name)}</div><span class="panel-tag">{html.escape(cat_tag)}</span></div>""",
+                f"""<div class="section-strip scroll-roll-card"><div class="panel-title">{html.escape(cat_name)}</div><span class="panel-tag">{html.escape(cat_tag)}</span></div>""",
                 unsafe_allow_html=True,
             )
             cols = st.columns(3)
@@ -1680,7 +1860,6 @@ with tab_matrix:
                     manual_inputs[col_key] = st.number_input(
                         f"{clean_label} [{unit_str}]", value=float(default_val), step=0.5, format="%.2f", key=f"man_{col_key}"
                     )
-            st.markdown("</div>", unsafe_allow_html=True)
 
     with m_right:
         man_kw = predict_power_kw(manual_inputs, is_day=1)
@@ -1701,14 +1880,13 @@ with tab_matrix:
             if col_key in feature_bounds and (manual_inputs[col_key] < feature_bounds[col_key][0] or manual_inputs[col_key] > feature_bounds[col_key][1])
         ]
         st.markdown(
-            """<div class="corp-panel scroll-roll-card"><div class="panel-header"><div class="panel-title">Model Domain Diagnostics</div><span class="panel-tag">20 FEATURES</span></div>""",
+            """<div class="section-strip scroll-roll-card"><div class="panel-title">Model Domain Diagnostics</div><span class="panel-tag">20 FEATURES</span></div>""",
             unsafe_allow_html=True,
         )
         if oob_warnings:
             st.warning("Extrapolation detected:\n\n" + "\n".join(oob_warnings[:6]))
         else:
             st.success("All 20 manual inputs reside within historical training distribution bounds.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------------------------------------------------------------------
 # TAB 3: NASA POWER HISTORICAL VALIDATION WORKBENCH
@@ -1765,7 +1943,7 @@ with tab_nasa:
                 text="7-DAY SATELLITE IRRADIANCE vs. RANDOM FOREST POWER RECONSTRUCTION",
                 font=dict(family="JetBrains Mono, monospace", size=11, color="#94a3b8"),
             ),
-            paper_bgcolor="rgba(10, 16, 29, 0.82)",
+            paper_bgcolor="rgba(10, 16, 29, 0.84)",
             plot_bgcolor="rgba(0,0,0,0)",
             height=380,
             margin=dict(l=14, r=14, t=46, b=16),
@@ -1809,7 +1987,7 @@ st.markdown(
     <div class="arch-grid">
         <div class="arch-card"><div class="arch-role">METEOROLOGICAL FORECASTING</div><div class="arch-provider">Open-Meteo Weather API</div><div class="arch-desc">Real-time 15-minute &amp; hourly numerical weather prediction (NWP), multi-altitude wind shear (10m/80m), and shortwave radiation flux.</div></div>
         <div class="arch-card"><div class="arch-role">SATELLITE VALIDATION</div><div class="arch-provider">NASA LaRC POWER Archive</div><div class="arch-desc">Prediction Of Worldwide Energy Resources (Agroclimatology &amp; Renewable Energy) surface shortwave downward irradiance.</div></div>
-        <div class="arch-card"><div class="arch-role">GEOSPATIAL &amp; LIVE GPS</div><div class="arch-provider">HTML5 Geolocation &amp; Nominatim</div><div class="arch-desc">Hardware browser GPS acquisition with reverse geocoding, Haversine proximity ranking, and CARTO DarkMatter vector tiles.</div></div>
+        <div class="arch-card"><div class="arch-role">GEOSPATIAL &amp; LIVE GPS</div><div class="arch-provider">HTML5 Geolocation &amp; CARTO</div><div class="arch-desc">Hardware browser GPS acquisition with reverse geocoding, OpenStreetMap contributors &amp; CARTO DarkMatter vector map lock.</div></div>
         <div class="arch-card"><div class="arch-role">MACHINE LEARNING &amp; VISUALIZATION</div><div class="arch-provider">Scikit-Learn RF &amp; Plotly WebGL</div><div class="arch-desc">20-feature Random Forest regression ensemble paired with solar zenith/AOI geometry synthesis and spline-interpolated diurnal curves.</div></div>
     </div>
 </div>
