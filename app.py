@@ -22,7 +22,7 @@ st.set_page_config(
 )
 
 # ==============================================================================
-# 2. FLUID FULL-SCREEN, BLANK-CANVAS BOOT & 3D SCROLL-POP DESIGN SYSTEM
+# 2. FLUID FULL-SCREEN, MOBILE-LOCKED & 3D SCROLL-POP DESIGN SYSTEM
 # ==============================================================================
 st.markdown(
     """
@@ -83,52 +83,43 @@ footer {
     padding-top: 0.9rem !important;
     padding-left: 1.4rem !important;
     padding-right: 1.4rem !important;
-    padding-bottom: 3rem !important;
+    padding-bottom: 2.5rem !important;
     margin: 0 auto !important;
 }
 
 /* ==========================================================================
-   BLANK-CANVAS BOOT LOCK (HIDES ALL BRICKS UNTIL SWARM BUILDS THEM)
+   3D SCROLL-ROLL, SPRING POP-UP, FLOATING TILE & HOLO-SWEEP KEYFRAMES
    ========================================================================== */
-@keyframes safetyFallbackReveal {
-    to { opacity: 1; transform: none; }
+@keyframes rollPopIn3D {
+    0% {
+        opacity: 0;
+        transform: perspective(1000px) rotateX(24deg) translateY(34px) scale(0.92);
+    }
+    65% {
+        opacity: 1;
+        transform: perspective(1000px) rotateX(-3deg) translateY(-4px) scale(1.015);
+    }
+    100% {
+        opacity: 1;
+        transform: perspective(1000px) rotateX(0deg) translateY(0px) scale(1);
+    }
 }
 
-body:not(.spgx-build-complete) .corp-header,
-body:not(.spgx-build-complete) .marquee-shell,
-body:not(.spgx-build-complete) div[data-testid="stTabs"] > div[role="tablist"],
-body:not(.spgx-build-complete) .section-strip,
-body:not(.spgx-build-complete) div[data-testid="stSelectbox"],
-body:not(.spgx-build-complete) div[data-testid="stCheckbox"],
-body:not(.spgx-build-complete) div[data-testid="stTextInput"],
-body:not(.spgx-build-complete) div[data-testid="stExpander"],
-body:not(.spgx-build-complete) div[data-testid="stSlider"],
-body:not(.spgx-build-complete) .telemetry-bar,
-body:not(.spgx-build-complete) .kpi-card,
-body:not(.spgx-build-complete) .yield-hero,
-body:not(.spgx-build-complete) div[data-testid="stPlotlyChart"],
-body:not(.spgx-build-complete) .map-caption-strip,
-body:not(.spgx-build-complete) .arch-card {
-    opacity: 0;
-    transform: perspective(1000px) rotateX(16deg) translateY(24px) scale(0.94);
-    animation: safetyFallbackReveal 0.6s ease 15s forwards;
+@keyframes cardShufflePop {
+    0% {
+        opacity: 0;
+        transform: perspective(900px) rotateY(-16deg) rotateX(12deg) translateY(28px) scale(0.9);
+    }
+    70% {
+        opacity: 1;
+        transform: perspective(900px) rotateY(2deg) rotateX(-2deg) translateY(-4px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: perspective(900px) rotateY(0deg) rotateX(0deg) translateY(0px) scale(1);
+    }
 }
 
-/* Class applied by Swarm Engine the moment a brick finishes construction */
-.spgx-brick-built {
-    opacity: 1 !important;
-    transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1) !important;
-    transition:
-        opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.68s cubic-bezier(0.22, 1.28, 0.36, 1),
-        border-color 0.3s ease,
-        box-shadow 0.35s ease !important;
-    animation: none !important;
-}
-
-/* ==========================================================================
-   KEYFRAMES FOR POST-BUILD HOVER, FLOATING & HOLOGRAPHIC EFFECTS
-   ========================================================================== */
 @keyframes tileFloat {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-4px); }
@@ -154,6 +145,11 @@ body:not(.spgx-build-complete) .arch-card {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
+}
+
+.scroll-roll-card {
+    animation: rollPopIn3D 0.7s cubic-bezier(0.22, 1.28, 0.36, 1) both;
+    will-change: transform, opacity;
 }
 
 /* ==========================================================================
@@ -344,7 +340,7 @@ body:not(.spgx-build-complete) .arch-card {
 }
 
 /* ==========================================================================
-   COMPACT SECTION HEADER STRIP
+   COMPACT SECTION HEADER STRIP (ZERO EMPTY BOX GAP)
    ========================================================================== */
 .section-strip {
     width: 100%;
@@ -403,7 +399,7 @@ body:not(.spgx-build-complete) .arch-card {
 }
 
 /* ==========================================================================
-   KPI TELEMETRY DECK (HOLO-SWEEP + POP-UP HOVER)
+   KPI TELEMETRY DECK (HOLO-SWEEP + FLOATING TILES + POP-UP HOVER)
    ========================================================================== */
 .kpi-grid {
     display: grid;
@@ -424,8 +420,16 @@ body:not(.spgx-build-complete) .arch-card {
     min-width: 0;
     transform-style: preserve-3d;
     transition: transform 0.38s cubic-bezier(0.22, 1.28, 0.36, 1), border-color 0.3s ease, box-shadow 0.38s ease;
+    animation: cardShufflePop 0.65s cubic-bezier(0.22, 1.28, 0.36, 1) both, tileFloat 5.5s ease-in-out infinite;
 }
 
+.kpi-card:nth-child(1) { animation-delay: 0.04s, 0.0s; }
+.kpi-card:nth-child(2) { animation-delay: 0.10s, 0.7s; }
+.kpi-card:nth-child(3) { animation-delay: 0.16s, 1.4s; }
+.kpi-card:nth-child(4) { animation-delay: 0.22s, 2.1s; }
+.kpi-card:nth-child(5) { animation-delay: 0.28s, 2.8s; }
+
+/* Holographic Sheen Sweep Across Tiles */
 .kpi-card::before {
     content: "";
     position: absolute;
@@ -532,7 +536,7 @@ body:not(.spgx-build-complete) .arch-card {
 }
 
 .yield-hero:hover {
-    transform: perspective(1000px) rotateX(3deg) translateY(-4px) scale(1.01) !important;
+    transform: perspective(1000px) rotateX(3deg) translateY(-4px) scale(1.01);
     box-shadow: 0 24px 52px -10px rgba(245, 158, 11, 0.25);
 }
 
@@ -682,7 +686,7 @@ div[data-testid="stTabs"] div[data-baseweb="tab-highlight"] {
 
 .arch-card:hover {
     border-color: rgba(245, 158, 11, 0.6);
-    transform: perspective(800px) rotateX(5deg) translateY(-6px) scale(1.02) !important;
+    transform: perspective(800px) rotateX(5deg) translateY(-6px) scale(1.02);
     box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.65);
 }
 
@@ -728,7 +732,7 @@ div[data-testid="stSelectbox"] > div > div {
         padding-top: 0.6rem !important;
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
-        padding-bottom: 2.5rem !important;
+        padding-bottom: 2rem !important;
     }
 
     .corp-header {
@@ -892,7 +896,7 @@ def reverse_geocode_coords(lat: float, lon: float) -> str:
         r = requests.get(
             "https://nominatim.openstreetmap.org/reverse",
             params={"lat": lat, "lon": lon, "format": "jsonv2", "zoom": 15},
-            headers={"User-Agent": "SPGX-Solar-Workbench/8.0"},
+            headers={"User-Agent": "SPGX-Solar-Workbench/5.0"},
             timeout=5,
         )
         if r.status_code == 200:
@@ -919,6 +923,7 @@ def reverse_geocode_coords(lat: float, lon: float) -> str:
 
 
 def parse_direct_gps_query(query: str):
+    """Parse queries like 'GPS: 22.5867, 88.4750' or '22.5867, 88.4750' directly into coordinates."""
     q = (query or "").strip()
     m = re.search(r"(-?\d+\.\d+)\s*[,/;\s]\s*(-?\d+\.\d+)", q)
     if m:
@@ -995,6 +1000,7 @@ def predict_power_kw(telemetry_dict: dict, is_day: int = 1, geometry_scale: floa
 def search_locations_multi_engine(query: str, prioritize_india: bool = True, prioritize_nearby: bool = True, gmaps_api_key: str = ""):
     q = (query or "").strip()
 
+    # Direct GPS Coordinate Bridge (Triggered when user clicks Detect My Live GPS Location)
     parsed_gps = parse_direct_gps_query(q)
     if parsed_gps is not None:
         g_lat, g_lon = parsed_gps
@@ -1284,7 +1290,7 @@ model_status_label = "RF-ENSEMBLE // ONLINE" if model is not None else "PHYSICS 
 
 st.markdown(
     f"""
-<div class="corp-header">
+<div class="corp-header scroll-roll-card">
     <div>
         <div class="brand-eyebrow"><span class="pulse-dot"></span> SPG-X // UTILITY-SCALE PHOTOVOLTAIC TELEMETRY &amp; FORECASTING</div>
         <h1 class="brand-title">Solar Power Prediction Grid &amp; Telemetry Workbench</h1>
@@ -1297,7 +1303,7 @@ st.markdown(
     </div>
 </div>
 
-<div class="marquee-shell">
+<div class="marquee-shell scroll-roll-card">
     <div class="marquee-pin">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.3"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         POWERED BY
@@ -1308,13 +1314,13 @@ st.markdown(
             <span class="api-badge"><span class="api-dot"></span>NASA LaRC POWER Satellite Archive</span>
             <span class="api-badge"><span class="api-dot"></span>HTML5 Browser GPS Geolocation</span>
             <span class="api-badge"><span class="api-dot"></span>OpenStreetMap Contributors &amp; CARTO Maps</span>
-            <span class="api-badge"><span class="api-dot"></span>Swarm Rebuild Brick-by-Brick Engine</span>
+            <span class="api-badge"><span class="api-dot"></span>Komoot Photon Spatial Search</span>
             <span class="api-badge"><span class="api-dot"></span>Scikit-Learn Random Forest (20-Feature Ensemble)</span>
             <span class="api-badge"><span class="api-dot"></span>Open-Meteo NWP Weather API</span>
             <span class="api-badge"><span class="api-dot"></span>NASA LaRC POWER Satellite Archive</span>
             <span class="api-badge"><span class="api-dot"></span>HTML5 Browser GPS Geolocation</span>
             <span class="api-badge"><span class="api-dot"></span>OpenStreetMap Contributors &amp; CARTO Maps</span>
-            <span class="api-badge"><span class="api-dot"></span>Swarm Rebuild Brick-by-Brick Engine</span>
+            <span class="api-badge"><span class="api-dot"></span>Komoot Photon Spatial Search</span>
             <span class="api-badge"><span class="api-dot"></span>Scikit-Learn Random Forest (20-Feature Ensemble)</span>
         </div>
     </div>
@@ -1335,7 +1341,7 @@ tab_live, tab_matrix, tab_nasa = st.tabs(
 )
 
 # ------------------------------------------------------------------------------
-# TAB 1: FULL-SCREEN BENTO TELEMETRY, LIVE GPS, BRICK-BY-BRICK SWARM & CARTO MAP
+# TAB 1: FULL-SCREEN BENTO TELEMETRY, LIVE GPS & CARTO MAP WORKBENCH
 # ------------------------------------------------------------------------------
 with tab_live:
     col_left, col_right = st.columns([1.05, 2.15], gap="large")
@@ -1343,7 +1349,7 @@ with tab_live:
     with col_left:
         st.markdown(
             """
-        <div class="section-strip">
+        <div class="section-strip scroll-roll-card">
             <div class="panel-title">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
                 Spatial Target &amp; Live GPS Lock
@@ -1354,7 +1360,7 @@ with tab_live:
             unsafe_allow_html=True,
         )
 
-        # Unclipped GPS Button + Slow, Smooth Brick-by-Brick Blank-Canvas Swarm Engine
+        # Unclipped Full-Width Mobile/Desktop GPS Button + Dynamic 3D Scroll-Pop Engine
         components.html(
             """
             <!DOCTYPE html>
@@ -1369,60 +1375,37 @@ with tab_live:
                     overflow: hidden;
                     font-family: 'JetBrains Mono', monospace;
                 }
-                .btn-row {
-                    display: flex;
-                    gap: 8px;
-                    width: 100%;
-                }
                 .gps-btn {
-                    flex: 1;
+                    width: 100%;
                     min-height: 48px;
-                    padding: 10px 12px;
+                    padding: 10px 14px;
                     border-radius: 10px;
                     border: 1.5px solid rgba(16, 185, 129, 0.65);
                     background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(14, 165, 233, 0.18) 100%);
                     color: #f8fafc;
                     font-family: 'JetBrains Mono', monospace;
-                    font-size: clamp(10px, 2.5vw, 11.5px);
+                    font-size: clamp(10.5px, 2.7vw, 12px);
                     font-weight: 700;
-                    letter-spacing: 0.04em;
-                    line-height: 1.25;
+                    letter-spacing: 0.05em;
+                    line-height: 1.3;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     text-align: center;
-                    gap: 8px;
+                    gap: 9px;
                     box-shadow: 0 6px 18px -4px rgba(16, 185, 129, 0.28);
                     transition: all 0.25s cubic-bezier(0.22, 1.28, 0.36, 1);
                 }
                 .gps-btn:hover, .gps-btn:active {
                     border-color: #f59e0b;
-                    transform: translateY(-2px);
+                    transform: translateY(-2px) scale(1.01);
                     box-shadow: 0 10px 22px -4px rgba(245, 158, 11, 0.35);
                 }
-                .swarm-btn {
-                    min-height: 48px;
-                    padding: 10px 12px;
-                    border-radius: 10px;
-                    border: 1.5px solid rgba(245, 158, 11, 0.6);
-                    background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(14, 165, 233, 0.16) 100%);
-                    color: #f8fafc;
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: clamp(10px, 2.4vw, 11px);
-                    font-weight: 700;
-                    cursor: pointer;
-                    white-space: nowrap;
-                    transition: all 0.25s cubic-bezier(0.22, 1.28, 0.36, 1);
-                }
-                .swarm-btn:hover {
-                    border-color: #38bdf8;
-                    transform: translateY(-2px);
-                }
                 .gps-dot {
-                    width: 8px;
-                    height: 8px;
-                    min-width: 8px;
+                    width: 9px;
+                    height: 9px;
+                    min-width: 9px;
                     border-radius: 50%;
                     background: #10b981;
                     box-shadow: 0 0 10px #10b981;
@@ -1430,15 +1413,10 @@ with tab_live:
             </style>
             </head>
             <body>
-                <div class="btn-row">
-                    <button id="gpsBtn" class="gps-btn" onclick="requestLiveGPS()">
-                        <span id="gpsDot" class="gps-dot"></span>
-                        <span id="gpsBtnText">DETECT MY LIVE GPS LOCATION</span>
-                    </button>
-                    <button class="swarm-btn" onclick="triggerParentSwarmRebuild()" title="Replay Blank-Canvas Brick-by-Brick Build">
-                        &#9889; REPLAY BUILD
-                    </button>
-                </div>
+                <button id="gpsBtn" class="gps-btn" onclick="requestLiveGPS()">
+                    <span id="gpsDot" class="gps-dot"></span>
+                    <span id="gpsBtnText">DETECT MY LIVE GPS LOCATION (AUTO-FEED)</span>
+                </button>
 
                 <script>
                 function feedCoordsToStreamlit(lat, lon) {
@@ -1480,620 +1458,61 @@ with tab_live:
                                 : navigator.geolocation;
 
                     if (!geo) {
-                        btnText.innerText = 'GPS NOT SUPPORTED';
+                        btnText.innerText = 'GPS NOT SUPPORTED BY BROWSER';
                         return;
                     }
 
-                    btnText.innerText = 'ACQUIRING LIVE GPS...';
+                    btnText.innerText = 'ACQUIRING SATELLITE / BROWSER GPS...';
                     dot.style.background = '#f59e0b';
+                    dot.style.boxShadow = '0 0 12px #f59e0b';
 
                     geo.getCurrentPosition(
                         function(pos) {
                             const lat = pos.coords.latitude.toFixed(5);
                             const lon = pos.coords.longitude.toFixed(5);
                             dot.style.background = '#10b981';
-                            btnText.innerText = 'GPS LOCKED: ' + lat + '°N, ' + lon + '°E';
+                            btnText.innerText = 'LIVE GPS LOCKED: ' + lat + '°N, ' + lon + '°E';
                             feedCoordsToStreamlit(lat, lon);
                         },
                         function(err) {
                             dot.style.background = '#ef4444';
-                            btnText.innerText = 'ALLOW LOCATION PERMISSION';
+                            btnText.innerText = 'LOCATION BLOCKED // ENABLE PERMISSION IN BROWSER';
                         },
                         { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
                     );
                 }
 
-                function triggerParentSwarmRebuild() {
-                    try {
-                        if (window.parent && window.parent.runSPGXBrickByBrickRebuild) {
-                            window.parent.runSPGXBrickByBrickRebuild();
-                        }
-                    } catch (e) {}
-                }
-
-                // =========================================================================
-                // BRICK-BY-BRICK BLANK-CANVAS SWARM ENGINE (INSPIRED BY swarm-cursors)
-                // SLOW, DELIBERATE, SEQUENTIAL CONSTRUCTION -> RADIAL SCATTER EXIT
-                // =========================================================================
-                (function setupBrickByBrickSwarmEngine() {
-                    try {
-                        const pWin = window.parent;
-                        const pDoc = pWin.document;
-
-                        // If initial build already finished in this session, keep bricks visible on Streamlit reruns
-                        if (pWin.__spgxInitialBuildDone && !pWin.__spgxRebuilding) {
-                            pDoc.body.classList.add('spgx-build-complete');
-                        }
-
-                        // 1. Attach 3D Scroll-Roll IntersectionObserver (Active only after build finishes)
-                        if (!pWin.__spgxScrollObserverAttached) {
-                            pWin.__spgxScrollObserverAttached = true;
-                            const observer = new IntersectionObserver((entries) => {
-                                entries.forEach((entry) => {
-                                    if (pWin.__spgxRebuilding || !pDoc.body.classList.contains('spgx-build-complete')) return;
-                                    if (entry.isIntersecting) {
-                                        entry.target.style.opacity = '1';
-                                        entry.target.style.transform = 'perspective(950px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1)';
-                                    } else {
-                                        const rect = entry.boundingClientRect;
-                                        const tiltDir = rect.top > 0 ? 13 : -11;
-                                        entry.target.style.opacity = '0.74';
-                                        entry.target.style.transform = 'perspective(950px) rotateX(' + tiltDir + 'deg) translateY(' + (rect.top > 0 ? '18px' : '-12px') + ') scale(0.96)';
-                                    }
-                                });
-                            }, { threshold: [0.08, 0.25] });
-
-                            const attachAnimations = () => {
-                                if (pWin.__spgxRebuilding) return;
-                                const selector = '.section-strip, .kpi-card, .yield-hero, .arch-card, .telemetry-bar, [data-testid="stPlotlyChart"], [data-testid="stNumberInput"], [data-testid="stSelectbox"], [data-testid="stTextInput"]';
-                                pDoc.querySelectorAll(selector).forEach((el) => {
-                                    if (!el.dataset.rollAttached) {
-                                        el.dataset.rollAttached = '1';
-                                        el.style.transition = 'transform 0.55s cubic-bezier(0.22, 1.28, 0.36, 1), opacity 0.5s ease, border-color 0.3s ease';
-                                        observer.observe(el);
-                                    }
-                                });
-                            };
-                            setInterval(attachAnimations, 2000);
-                        }
-
-                        // 2. Define the Slow, Smooth Brick-by-Brick Blank-Canvas Build Sequence
-                        pWin.runSPGXBrickByBrickRebuild = function() {
-                            if (pWin.__spgxAnimFrame) {
-                                pWin.cancelAnimationFrame(pWin.__spgxAnimFrame);
+                // Dynamic 3D Scroll-Roll & Pop-Up Physics Engine on Parent Page
+                try {
+                    const parentDoc = window.parent.document;
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                entry.target.style.opacity = '1';
+                                entry.target.style.transform = 'perspective(950px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1)';
+                            } else {
+                                const rect = entry.boundingClientRect;
+                                const tiltDir = rect.top > 0 ? 14 : -12;
+                                entry.target.style.opacity = '0.72';
+                                entry.target.style.transform = 'perspective(950px) rotateX(' + tiltDir + 'deg) translateY(' + (rect.top > 0 ? '20px' : '-14px') + ') scale(0.95)';
                             }
-                            const oldCanvas = pDoc.getElementById('spgx-swarm-canvas');
-                            if (oldCanvas) oldCanvas.remove();
+                        });
+                    }, { threshold: [0.08, 0.25] });
 
-                            // Lock body into blank-canvas mode
-                            pDoc.body.classList.remove('spgx-build-complete');
-                            pWin.__spgxRebuilding = true;
-
-                            const canvas = pDoc.createElement('canvas');
-                            canvas.id = 'spgx-swarm-canvas';
-                            canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:999999;';
-                            pDoc.body.appendChild(canvas);
-                            const ctx = canvas.getContext('2d');
-
-                            let W = canvas.width = pWin.innerWidth;
-                            let H = canvas.height = pWin.innerHeight;
-
-                            const COLORS = ['#f59e0b', '#0ea5e9', '#10b981', '#a855f7', '#ec4899', '#38bdf8', '#facc15', '#fb7185', '#34d399', '#818cf8'];
-                            const AGENT_TAGS = [
-                                'rf-ensemble', 'nasa-larc', 'meteo-nwp', 'carto-gl', 'aoi-vector',
-                                'zenith-calc', 'spline-48h', 'gps-lock', 'cloud-lay', 'wind-80m',
-                                'osm-nominatim', 'photon-geo', 'grid-dispatch', 'flux-wm2'
-                            ];
-
-                            // Gather all visible bricks in logical architectural order
-                            const selector = [
-                                '.corp-header',
-                                '.marquee-shell',
-                                'div[data-testid="stTabs"] > div[role="tablist"]',
-                                '.section-strip',
-                                'div[data-testid="stSelectbox"]',
-                                'div[data-testid="stTextInput"]',
-                                'div[data-testid="stSlider"]',
-                                '.telemetry-bar',
-                                '.kpi-card',
-                                '.yield-hero',
-                                'div[data-testid="stPlotlyChart"]',
-                                '.map-caption-strip',
-                                '.arch-card'
-                            ].join(', ');
-
-                            const rawEls = Array.from(pDoc.querySelectorAll(selector));
-                            const uniqueEls = [];
-                            const seenSet = new Set();
-
-                            rawEls.forEach((el) => {
-                                if (seenSet.has(el)) return;
-                                el.classList.remove('spgx-brick-built');
-                                el.style.transition = 'none';
-                                el.style.opacity = '0';
-                                el.style.transform = 'perspective(1000px) rotateX(16deg) translateY(24px) scale(0.94)';
-
-                                const r = el.getBoundingClientRect();
-                                if (r.width > 20 && r.height > 14 && r.bottom > 0 && r.top < H + 80) {
-                                    seenSet.add(el);
-                                    uniqueEls.push(el);
-                                } else {
-                                    // Offscreen elements reveal quietly so scrolling down later works
-                                    el.classList.add('spgx-brick-built');
-                                }
-                            });
-
-                            // Sort bricks top-to-bottom, left-to-right so construction flows like a real blueprint
-                            uniqueEls.sort((a, b) => {
-                                const ra = a.getBoundingClientRect();
-                                const rb = b.getBoundingClientRect();
-                                if (Math.abs(ra.top - rb.top) > 32) return ra.top - rb.top;
-                                return ra.left - rb.left;
-                            });
-
-                            if (!uniqueEls.length) {
-                                pDoc.body.classList.add('spgx-build-complete');
-                                pWin.__spgxRebuilding = false;
-                                canvas.remove();
-                                return;
+                    const attachAnimations = () => {
+                        const selector = '.section-strip, .kpi-card, .yield-hero, .arch-card, .telemetry-bar, [data-testid="stPlotlyChart"], [data-testid="stNumberInput"], [data-testid="stSelectbox"], [data-testid="stTextInput"]';
+                        parentDoc.querySelectorAll(selector).forEach((el) => {
+                            if (!el.dataset.rollAttached) {
+                                el.dataset.rollAttached = '1';
+                                el.style.transition = 'transform 0.52s cubic-bezier(0.22, 1.28, 0.36, 1), opacity 0.45s ease, border-color 0.3s ease, box-shadow 0.35s ease';
+                                observer.observe(el);
                             }
+                        });
+                    };
 
-                            const numBricks = uniqueEls.length;
-                            // Deliberate, unhurried brick-by-brick timing:
-                            // 0.00 -> 0.07: Initial cursor orbit at top center
-                            // 0.07 -> 0.92: Sequential brick-by-brick construction
-                            const ORBIT_FRAC = 0.07;
-                            const BUILD_SPAN = 0.85;
-                            const stepFrac = BUILD_SPAN / numBricks;
-                            const brickSpan = Math.min(0.16, stepFrac * 1.65); // Only 1-2 bricks active at a time!
-
-                            const bricks = uniqueEls.map((el, idx) => {
-                                const r = el.getBoundingClientRect();
-                                const startFrac = ORBIT_FRAC + idx * stepFrac;
-                                const endFrac = Math.min(0.96, startFrac + brickSpan);
-                                const rawText = (el.innerText || '').trim().split('\\n')[0] || ('BRICK_LAYER_' + (idx + 1));
-
-                                return {
-                                    idx,
-                                    el,
-                                    rect: r,
-                                    startFrac,
-                                    endFrac,
-                                    revealed: false,
-                                    flashAlpha: 0,
-                                    color: COLORS[idx % COLORS.length],
-                                    label: rawText.slice(0, 36),
-                                    isKpi: el.classList.contains('kpi-card')
-                                };
-                            });
-
-                            // Total build time scales smoothly with brick count (~10.5s - 11.5s)
-                            const BUILD_MS = Math.max(9800, Math.min(11800, numBricks * 580));
-                            const SCATTER_MS = 1150;
-                            const TOTAL_MS = BUILD_MS + SCATTER_MS;
-
-                            const originX = W * 0.5;
-                            const originY = Math.min(130, H * 0.2);
-
-                            // 42 Multiplayer Agents organized into 6-Agent Construction Squads
-                            const agents = Array.from({ length: 42 }, (_, i) => {
-                                const ang = (i / 42) * Math.PI * 2;
-                                const rad = 22 + (i % 6) * 12;
-                                const scatterAng = ang + (Math.random() - 0.5) * 0.3;
-                                const scatterSpeed = 14 + Math.random() * 14;
-                                const roleInSquad = i % 6;
-                                // Roles: 0=tl-anchor, 1=crosshair-drag, 2=ibeam-type, 3=tr-guide, 4=bl-guide, 5=inspector
-                                return {
-                                    id: i,
-                                    squadSlot: roleInSquad,
-                                    x: originX + Math.cos(ang) * rad,
-                                    y: originY + Math.sin(ang) * rad,
-                                    vx: 0,
-                                    vy: 0,
-                                    trail: [],
-                                    scatterVx: Math.cos(scatterAng) * scatterSpeed,
-                                    scatterVy: Math.sin(scatterAng) * scatterSpeed,
-                                    color: COLORS[i % COLORS.length],
-                                    tag: AGENT_TAGS[i % AGENT_TAGS.length],
-                                    role: roleInSquad === 1 ? 'crosshair' : (roleInSquad === 2 ? 'ibeam' : 'pointer'),
-                                    alpha: 1.0,
-                                    scale: 1.0
-                                };
-                            });
-
-                            const startTime = performance.now();
-
-                            function smoothstep(t) {
-                                const c = Math.max(0, Math.min(1, t));
-                                return c * c * (3 - 2 * c);
-                            }
-
-                            function easeOutCubic(t) {
-                                const c = Math.max(0, Math.min(1, t));
-                                return 1 - Math.pow(1 - c, 3);
-                            }
-
-                            function drawFigmaRulers(alpha, guideX, guideY, activeBrickIdx) {
-                                if (alpha <= 0.02) return;
-                                ctx.save();
-                                ctx.globalAlpha = alpha;
-
-                                // Top & Left Pixel Rulers
-                                ctx.fillStyle = 'rgba(6, 10, 19, 0.94)';
-                                ctx.fillRect(0, 0, W, 20);
-                                ctx.fillRect(0, 20, 20, H - 20);
-
-                                ctx.strokeStyle = 'rgba(148, 163, 184, 0.24)';
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(0, 20); ctx.lineTo(W, 20);
-                                ctx.moveTo(20, 0); ctx.lineTo(20, H);
-                                ctx.stroke();
-
-                                ctx.fillStyle = '#64748b';
-                                ctx.font = '500 8.5px "JetBrains Mono", monospace';
-                                for (let x = 100; x < W; x += 100) {
-                                    ctx.fillRect(x, 12, 1, 8);
-                                    ctx.fillText(String(x), x + 3, 10);
-                                }
-                                for (let y = 100; y < H; y += 100) {
-                                    ctx.fillRect(12, y, 8, 1);
-                                    ctx.save();
-                                    ctx.translate(10, y + 3);
-                                    ctx.rotate(-Math.PI / 2);
-                                    ctx.fillText(String(y), 0, 0);
-                                    ctx.restore();
-                                }
-
-                                // Active Red / Cyan Laser Alignment Guides
-                                if (guideY > 22 && guideY < H) {
-                                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-                                    ctx.setLineDash([3, 3]);
-                                    ctx.beginPath();
-                                    ctx.moveTo(20, guideY); ctx.lineTo(W, guideY);
-                                    ctx.stroke();
-                                }
-                                if (guideX > 22 && guideX < W) {
-                                    ctx.strokeStyle = 'rgba(14, 165, 233, 0.45)';
-                                    ctx.setLineDash([3, 3]);
-                                    ctx.beginPath();
-                                    ctx.moveTo(guideX, 20); ctx.lineTo(guideX, H);
-                                    ctx.stroke();
-                                }
-                                ctx.setLineDash([]);
-
-                                // Sleek Bottom Build Progress Pill
-                                const pillText = `SWARM ARCHITECT // BUILDING BRICK ${Math.min(numBricks, activeBrickIdx + 1)} OF ${numBricks} [42 AGENTS]`;
-                                ctx.font = '700 10.5px "JetBrains Mono", monospace';
-                                const ptw = ctx.measureText(pillText).width;
-                                const px = (W - ptw - 28) / 2;
-                                const py = H - 38;
-                                ctx.fillStyle = 'rgba(7, 11, 20, 0.92)';
-                                ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
-                                ctx.lineWidth = 1.2;
-                                ctx.beginPath();
-                                ctx.roundRect(px, py, ptw + 28, 24, 999);
-                                ctx.fill();
-                                ctx.stroke();
-                                ctx.fillStyle = '#f59e0b';
-                                ctx.fillText(pillText, px + 14, py + 15.5);
-
-                                ctx.restore();
-                            }
-
-                            function drawAgentCursor(ag, showTag) {
-                                if (ag.alpha <= 0.02) return;
-                                ctx.save();
-                                ctx.globalAlpha = Math.max(0, Math.min(1, ag.alpha));
-
-                                // Draw smooth glowing motion trail
-                                if (ag.trail.length > 1) {
-                                    ctx.beginPath();
-                                    ctx.moveTo(ag.trail[0].x, ag.trail[0].y);
-                                    for (let k = 1; k < ag.trail.length; k++) {
-                                        ctx.lineTo(ag.trail[k].x, ag.trail[k].y);
-                                    }
-                                    ctx.strokeStyle = ag.color + '44';
-                                    ctx.lineWidth = 2;
-                                    ctx.lineCap = 'round';
-                                    ctx.stroke();
-                                }
-
-                                ctx.translate(ag.x, ag.y);
-                                ctx.scale(ag.scale, ag.scale);
-
-                                if (ag.role === 'crosshair') {
-                                    ctx.strokeStyle = ag.color;
-                                    ctx.lineWidth = 1.7;
-                                    ctx.beginPath();
-                                    ctx.moveTo(-8, 0); ctx.lineTo(8, 0);
-                                    ctx.moveTo(0, -8); ctx.lineTo(0, 8);
-                                    ctx.stroke();
-                                    ctx.strokeStyle = '#ffffff';
-                                    ctx.strokeRect(-2.5, -2.5, 5, 5);
-                                } else if (ag.role === 'ibeam') {
-                                    ctx.strokeStyle = ag.color;
-                                    ctx.lineWidth = 1.7;
-                                    ctx.beginPath();
-                                    ctx.moveTo(0, -7); ctx.lineTo(0, 7);
-                                    ctx.moveTo(-3.5, -7); ctx.lineTo(3.5, -7);
-                                    ctx.moveTo(-3.5, 7); ctx.lineTo(3.5, 7);
-                                    ctx.stroke();
-                                } else {
-                                    ctx.beginPath();
-                                    ctx.moveTo(0, 0);
-                                    ctx.lineTo(0, 15);
-                                    ctx.lineTo(4.2, 11.5);
-                                    ctx.lineTo(7.5, 18);
-                                    ctx.lineTo(10, 16.8);
-                                    ctx.lineTo(6.8, 10.2);
-                                    ctx.lineTo(12, 10.2);
-                                    ctx.closePath();
-                                    ctx.fillStyle = ag.color;
-                                    ctx.shadowColor = ag.color;
-                                    ctx.shadowBlur = 8;
-                                    ctx.fill();
-                                    ctx.shadowBlur = 0;
-                                    ctx.lineWidth = 1.25;
-                                    ctx.strokeStyle = '#ffffff';
-                                    ctx.stroke();
-                                }
-
-                                if (showTag && ag.tag) {
-                                    ctx.font = '600 9.5px "JetBrains Mono", monospace';
-                                    const tw = ctx.measureText(ag.tag).width;
-                                    ctx.fillStyle = 'rgba(7, 11, 20, 0.9)';
-                                    ctx.strokeStyle = ag.color;
-                                    ctx.lineWidth = 1;
-                                    ctx.beginPath();
-                                    ctx.roundRect(11, 10, tw + 10, 15, 4);
-                                    ctx.fill();
-                                    ctx.stroke();
-                                    ctx.fillStyle = '#f8fafc';
-                                    ctx.fillText(ag.tag, 16, 20.5);
-                                }
-                                ctx.restore();
-                            }
-
-                            function frame(now) {
-                                const elapsed = now - startTime;
-                                ctx.clearRect(0, 0, W, H);
-
-                                if (elapsed < BUILD_MS) {
-                                    const progress = elapsed / BUILD_MS;
-                                    let guideX = -1, guideY = -1;
-                                    let currentBrickIdx = 0;
-                                    const activeBricks = [];
-
-                                    // Evaluate each brick's construction progress
-                                    bricks.forEach((b, idx) => {
-                                        const r = b.rect;
-                                        const rawLocal = (progress - b.startFrac) / (b.endFrac - b.startFrac);
-
-                                        if (rawLocal >= 0 && rawLocal <= 1.0) {
-                                            activeBricks.push({ brick: b, localP: rawLocal });
-                                            currentBrickIdx = idx;
-
-                                            // Smoothly drag box from 0 -> 1
-                                            const dragP = easeOutCubic(Math.min(1, rawLocal / 0.78));
-                                            const curW = Math.max(10, r.width * dragP);
-                                            const curH = Math.max(10, r.height * dragP);
-
-                                            guideX = r.left + curW;
-                                            guideY = r.top + curH;
-
-                                            ctx.save();
-                                            // Blueprint Shimmer Fill
-                                            ctx.fillStyle = b.color + '18';
-                                            ctx.fillRect(r.left, r.top, curW, curH);
-
-                                            // Dashed Wireframe Box
-                                            ctx.strokeStyle = b.color;
-                                            ctx.lineWidth = 1.6;
-                                            ctx.setLineDash([6, 4]);
-                                            ctx.strokeRect(r.left, r.top, curW, curH);
-                                            ctx.setLineDash([]);
-
-                                            // 4 Corner CAD Handles
-                                            const hs = 4.5;
-                                            ctx.fillStyle = '#ffffff';
-                                            ctx.strokeStyle = b.color;
-                                            [
-                                                [r.left - hs / 2, r.top - hs / 2],
-                                                [r.left + curW - hs / 2, r.top - hs / 2],
-                                                [r.left - hs / 2, r.top + curH - hs / 2],
-                                                [r.left + curW - hs / 2, r.top + curH - hs / 2]
-                                            ].forEach(([hx, hy]) => {
-                                                ctx.fillRect(hx, hy, hs, hs);
-                                                ctx.strokeRect(hx, hy, hs, hs);
-                                            });
-
-                                            // Live W × H Dimension Pill Badge
-                                            const dimText = `${Math.round(curW)} × ${Math.round(curH)}`;
-                                            ctx.font = '700 9.5px "JetBrains Mono", monospace';
-                                            const dtw = ctx.measureText(dimText).width;
-                                            const bx = Math.max(r.left, r.left + curW - dtw - 10);
-                                            const by = r.top + curH + 4;
-                                            ctx.fillStyle = b.color;
-                                            ctx.beginPath();
-                                            ctx.roundRect(bx, by, dtw + 10, 15, 3);
-                                            ctx.fill();
-                                            ctx.fillStyle = '#04070d';
-                                            ctx.fillText(dimText, bx + 5, by + 11);
-
-                                            // Live I-Beam Typed Text inside the Brick
-                                            if (rawLocal > 0.22) {
-                                                const typeP = smoothstep((rawLocal - 0.22) / 0.62);
-                                                const chars = Math.floor(b.label.length * typeP);
-                                                const typed = b.label.slice(0, chars);
-                                                ctx.font = '600 10.5px "JetBrains Mono", monospace';
-                                                ctx.fillStyle = '#f8fafc';
-                                                const tx = r.left + 12;
-                                                const ty = r.top + Math.min(24, curH * 0.55);
-                                                ctx.fillText(typed, tx, ty);
-
-                                                if (Math.floor(now / 110) % 2 === 0) {
-                                                    const tw = ctx.measureText(typed).width;
-                                                    ctx.fillStyle = '#f59e0b';
-                                                    ctx.fillRect(tx + tw + 3, ty - 9, 2, 11);
-                                                }
-                                            }
-
-                                            // Red Option-Drag Gap Guide between adjacent KPI bricks
-                                            if (b.isKpi && idx > 0 && bricks[idx - 1].isKpi) {
-                                                const prevR = bricks[idx - 1].rect;
-                                                if (Math.abs(prevR.top - r.top) < 25 && r.left > prevR.right) {
-                                                    const midY = r.top + r.height / 2;
-                                                    ctx.strokeStyle = '#ef4444';
-                                                    ctx.lineWidth = 1.3;
-                                                    ctx.beginPath();
-                                                    ctx.moveTo(prevR.right, midY);
-                                                    ctx.lineTo(r.left, midY);
-                                                    ctx.stroke();
-                                                }
-                                            }
-                                            ctx.restore();
-                                        }
-
-                                        // Pop the real DOM Brick into existence when its wireframe reaches 86%
-                                        if (rawLocal >= 0.86 && !b.revealed) {
-                                            b.revealed = true;
-                                            b.flashAlpha = 0.85;
-                                            b.el.classList.add('spgx-brick-built');
-                                        }
-
-                                        // Subtle completion border glow when brick locks in
-                                        if (b.flashAlpha > 0.02) {
-                                            ctx.save();
-                                            ctx.strokeStyle = b.color;
-                                            ctx.globalAlpha = b.flashAlpha;
-                                            ctx.lineWidth = 2.5;
-                                            ctx.shadowColor = b.color;
-                                            ctx.shadowBlur = 14;
-                                            ctx.strokeRect(r.left, r.top, r.width, r.height);
-                                            ctx.restore();
-                                            b.flashAlpha *= 0.90;
-                                        }
-                                    });
-
-                                    drawFigmaRulers(0.92, guideX, guideY, currentBrickIdx);
-
-                                    // Direct all 42 Cursors in smooth squads onto the active brick(s)
-                                    agents.forEach((ag, i) => {
-                                        let tx, ty;
-
-                                        if (progress < ORBIT_FRAC) {
-                                            // Calm initial gather orbit at top center
-                                            const orbitAng = (i / 42) * Math.PI * 2 + (progress / ORBIT_FRAC) * Math.PI * 1.6;
-                                            const orbitRad = 26 + (i % 6) * 14;
-                                            tx = originX + Math.cos(orbitAng) * orbitRad;
-                                            ty = originY + Math.sin(orbitAng) * orbitRad;
-                                        } else {
-                                            // Assign each squad to one of the currently active bricks (1-2 bricks at a time)
-                                            const activeEntry = activeBricks.length
-                                                ? activeBricks[Math.floor(i / 6) % activeBricks.length]
-                                                : { brick: bricks[Math.min(bricks.length - 1, currentBrickIdx)], localP: 1.0 };
-
-                                            const b = activeEntry.brick;
-                                            const lp = activeEntry.localP;
-                                            const r = b.rect;
-                                            const dragP = easeOutCubic(Math.min(1, lp / 0.78));
-                                            const curW = Math.max(10, r.width * dragP);
-                                            const curH = Math.max(10, r.height * dragP);
-
-                                            if (ag.squadSlot === 0) {
-                                                // Top-left anchor cursor
-                                                tx = r.left;
-                                                ty = r.top;
-                                            } else if (ag.squadSlot === 1) {
-                                                // Bottom-right crosshair dragging cursor
-                                                tx = r.left + curW;
-                                                ty = r.top + curH;
-                                            } else if (ag.squadSlot === 2) {
-                                                // I-Beam typing cursor gliding left-to-right inside box
-                                                const typeP = smoothstep(Math.max(0, (lp - 0.22) / 0.62));
-                                                tx = r.left + 14 + Math.min(r.width - 24, typeP * 195);
-                                                ty = r.top + Math.min(24, curH * 0.55);
-                                            } else if (ag.squadSlot === 3) {
-                                                // Top-right corner guide cursor
-                                                tx = r.left + curW;
-                                                ty = r.top;
-                                            } else if (ag.squadSlot === 4) {
-                                                // Bottom-left corner guide cursor
-                                                tx = r.left;
-                                                ty = r.top + curH;
-                                            } else {
-                                                // Perimeter inspector cursor
-                                                const perimAng = now * 0.0045 + i;
-                                                tx = r.left + (Math.cos(perimAng) * 0.42 + 0.5) * curW;
-                                                ty = r.top + (Math.sin(perimAng) * 0.42 + 0.5) * curH;
-                                            }
-                                        }
-
-                                        // Smooth spring-damped cursor kinematics
-                                        ag.vx += (tx - ag.x) * 0.14;
-                                        ag.vy += (ty - ag.y) * 0.14;
-                                        ag.vx *= 0.72;
-                                        ag.vy *= 0.72;
-                                        ag.x += ag.vx;
-                                        ag.y += ag.vy;
-
-                                        ag.trail.push({ x: ag.x, y: ag.y });
-                                        if (ag.trail.length > 6) ag.trail.shift();
-
-                                        drawAgentCursor(ag, i % 3 === 0);
-                                    });
-
-                                    pWin.__spgxAnimFrame = pWin.requestAnimationFrame(frame);
-
-                                } else if (elapsed < TOTAL_MS) {
-                                    // PHASE 2: ALL BRICKS BUILT -> CURSORS SCATTER RADIALLY OFF-SCREEN
-                                    const scatterP = (elapsed - BUILD_MS) / SCATTER_MS;
-
-                                    bricks.forEach((b) => {
-                                        if (!b.revealed) {
-                                            b.revealed = true;
-                                            b.el.classList.add('spgx-brick-built');
-                                        }
-                                    });
-
-                                    drawFigmaRulers(Math.max(0, 1 - scatterP * 2.4), -1, -1, numBricks - 1);
-
-                                    agents.forEach((ag, i) => {
-                                        ag.x += ag.scatterVx * (0.9 + scatterP * 1.9);
-                                        ag.y += ag.scatterVy * (0.9 + scatterP * 1.9);
-                                        ag.alpha = Math.max(0, 1 - easeOutCubic(scatterP));
-                                        ag.scale = Math.max(0.4, 1 - scatterP * 0.5);
-
-                                        ag.trail.push({ x: ag.x, y: ag.y });
-                                        if (ag.trail.length > 5) ag.trail.shift();
-
-                                        drawAgentCursor(ag, i % 4 === 0);
-                                    });
-
-                                    pWin.__spgxAnimFrame = pWin.requestAnimationFrame(frame);
-
-                                } else {
-                                    // PHASE 3: CLEANUP — MARK BUILD COMPLETE & UNMOUNT OVERLAY CANVAS
-                                    bricks.forEach((b) => b.el.classList.add('spgx-brick-built'));
-                                    pDoc.body.classList.add('spgx-build-complete');
-                                    pWin.__spgxRebuilding = false;
-                                    canvas.remove();
-                                }
-                            }
-
-                            pWin.__spgxAnimFrame = pWin.requestAnimationFrame(frame);
-                        };
-
-                        // Run Brick-by-Brick Blank-Canvas Build automatically on initial page load
-                        if (!pWin.__spgxInitialBuildDone) {
-                            pWin.__spgxInitialBuildDone = true;
-                            setTimeout(() => {
-                                pWin.runSPGXBrickByBrickRebuild();
-                            }, 120);
-                        }
-                    } catch (err) {}
-                })();
+                    setTimeout(attachAnimations, 250);
+                    setInterval(attachAnimations, 1500);
+                } catch (e) {}
                 </script>
             </body>
             </html>
@@ -2177,6 +1596,7 @@ with tab_live:
         halo_color = "rgba(16, 185, 129, 0.24)" if is_gps_source else "rgba(245, 158, 11, 0.22)"
 
         map_fig = go.Figure()
+        # Outer Radar Pulse Halo
         map_fig.add_trace(
             go.Scattermap(
                 lat=[lat_val],
@@ -2187,6 +1607,7 @@ with tab_live:
                 showlegend=False,
             )
         )
+        # Inner Target Ring + Label
         map_fig.add_trace(
             go.Scattermap(
                 lat=[lat_val],
@@ -2300,7 +1721,7 @@ with tab_live:
 
         st.markdown(
             f"""
-        <div class="telemetry-bar">
+        <div class="telemetry-bar scroll-roll-card">
             <div>
                 <strong style="color:#f8fafc;">TARGET:</strong> {html.escape(short_name.upper())} ({active_loc.get('dist_km', 0.0):.0f} km) &nbsp;|&nbsp;
                 <strong style="color:#f8fafc;">COORDS:</strong> {lat_val:.4f}&deg;N, {lon_val:.4f}&deg;E &nbsp;|&nbsp;
@@ -2337,7 +1758,7 @@ with tab_live:
             </div>
         </div>
 
-        <div class="yield-hero">
+        <div class="yield-hero scroll-roll-card">
             <div>
                 <div class="yield-eyebrow">ESTIMATED ACTIVE PHOTOVOLTAIC GENERATION</div>
                 <div class="yield-location">{html.escape(short_name.upper())} // GRID DISPATCH ESTIMATE</div>
@@ -2430,7 +1851,7 @@ with tab_matrix:
             ("Multi-Altitude Wind Profile", "ANEMOMETER & HUB SHEAR"),
         ]:
             st.markdown(
-                f"""<div class="section-strip"><div class="panel-title">{html.escape(cat_name)}</div><span class="panel-tag">{html.escape(cat_tag)}</span></div>""",
+                f"""<div class="section-strip scroll-roll-card"><div class="panel-title">{html.escape(cat_name)}</div><span class="panel-tag">{html.escape(cat_tag)}</span></div>""",
                 unsafe_allow_html=True,
             )
             cols = st.columns(3)
@@ -2444,7 +1865,7 @@ with tab_matrix:
         man_kw = predict_power_kw(manual_inputs, is_day=1)
         st.markdown(
             f"""
-        <div class="yield-hero" style="flex-direction:column; align-items:flex-start;">
+        <div class="yield-hero scroll-roll-card" style="flex-direction:column; align-items:flex-start;">
             <div class="yield-eyebrow">MANUAL TELEMETRY DISPATCH SIMULATION</div>
             <div class="yield-number" style="margin:0.5rem 0;">{man_kw:,.2f}<span class="yield-unit">kW</span></div>
             <div class="yield-note">Real-time Random Forest response across all 20 atmospheric &amp; geometric parameters.</div>
@@ -2459,7 +1880,7 @@ with tab_matrix:
             if col_key in feature_bounds and (manual_inputs[col_key] < feature_bounds[col_key][0] or manual_inputs[col_key] > feature_bounds[col_key][1])
         ]
         st.markdown(
-            """<div class="section-strip"><div class="panel-title">Model Domain Diagnostics</div><span class="panel-tag">20 FEATURES</span></div>""",
+            """<div class="section-strip scroll-roll-card"><div class="panel-title">Model Domain Diagnostics</div><span class="panel-tag">20 FEATURES</span></div>""",
             unsafe_allow_html=True,
         )
         if oob_warnings:
@@ -2473,7 +1894,7 @@ with tab_matrix:
 with tab_nasa:
     st.markdown(
         f"""
-    <div class="telemetry-bar">
+    <div class="telemetry-bar scroll-roll-card">
         <div>
             <strong style="color:#f8fafc;">NASA LARC POWER ARCHIVE //</strong>
             Validating most recent published 7-day satellite window for <strong>{html.escape(short_name.upper())}</strong> ({lat_val:.4f}&deg;N, {lon_val:.4f}&deg;E)
@@ -2558,7 +1979,7 @@ with tab_nasa:
 # ==============================================================================
 st.markdown(
     """
-<div class="arch-footer">
+<div class="arch-footer scroll-roll-card">
     <div style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:700; color:#94a3b8; letter-spacing:0.12em; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
         SYSTEM INFRASTRUCTURE // SUPPORTING APIS &amp; TELEMETRY PIPELINES
